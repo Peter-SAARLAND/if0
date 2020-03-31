@@ -1,5 +1,8 @@
 # Contriubuting Guidelines
 
+# Versioning
+This repository follows [Semantic Versioning](https://semver.org/) which is implemented via CI. Versioning happens automatically upon every commit in `master`.
+
 # Style Guide
 
 All pull requests SHOULD adhere to the [Conventional Commits](https://conventionalcommits.org/) specification.
@@ -62,4 +65,19 @@ on typos fixed.
 
 Reviewed-by: Z
 Refs #133
+```
+
+## Conform
+We use tooling to validate conformity of commits. Our tool of choice for this repository is [Conform](https://github.com/talos-systems/conform). Please refer to the [repository](https://github.com/talos-systems/conform) for installation instructions.
+
+To let Conform validate your commits upon sending, hook it to `commit-msg`:
+
+```
+cat <<EOF | tee .git/hooks/commit-msg
+#!/bin/sh
+
+conform enforce --commit-msg-file \$1
+EOF
+chmod +x .git/hooks/commit-msg
+
 ```
