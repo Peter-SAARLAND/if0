@@ -2,6 +2,13 @@
 
 <!--- next entry here -->
 
+## 0.3.0
+2020-04-06
+
+### Features
+
+- including logic to add/update if0 or zero-cluster config files (5baed5f1dce4e450b909f00488cf097e1c77ad06)
+
 ## 0.2.0
 2020-03-31
 
