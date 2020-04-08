@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/cast"
 	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
@@ -21,17 +22,19 @@ var (
 	snapshotsDir = filepath.Join(rootPath, ".snapshots")
 )
 
-//func setEnvVariable(key, value string) {
-//	viper.Set(key, value)
-//	getEnvVariable(key)
-//}
-//
-//func getEnvVariable(key string) interface{} {
-//	// tells viper to look at environment variables
-//	val := viper.Get(key)
-//	log.Println(val)
-//	return val
-//}
+func SetEnvVariable(key, value string) {
+	key = strings.TrimSpace(key)
+	value = strings.TrimSpace(value)
+	viper.Set(key, value)
+	if value == GetEnvVariable(key) {
+		log.Printf("key %s update with %s successful \n", key, value)
+	}
+}
+
+func GetEnvVariable(key string) string {
+	val := viper.Get(key)
+	return cast.ToString(val)
+}
 
 // PrintCurrentRunningConfig reads the current running if0/env configuration file and prints it
 func PrintCurrentRunningConfig() {

@@ -22,6 +22,7 @@ import (
 	"github.com/spf13/viper"
 	"if0/config"
 	"os"
+	"strings"
 )
 
 const (
@@ -35,6 +36,11 @@ var (
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
 	zero bool
 
+	// set flag: used to set environment variables.
+	// accepts comma separated values. Example: if0 addConfig --set "TESTVAR1=testval1, TESTVAR2-testval2"
+	set []string
+
+
 	// addConfigCmd represents the addConfig command
 	addConfigCmd = &cobra.Command{
 		Use:   "addConfig",
@@ -42,35 +48,47 @@ var (
 		Long: `if0 is a CLI tool for zero. 
 		It has features to add or update configuration for if0 or for zero-clusters`,
 		Run: func(cmd *cobra.Command, args []string) {
-
+			if set != nil {
+				log.Println("Reading environment variables from flag --set")
+				loadConfigFromFlags(set)
+			}
+			// checking if a configuration file has been provided in the command
+			if len(args) != 0 {
+				log.Debugln("Updating configuration")
+				loadConfigFromFile(args)
+			}
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
 			config.PrintCurrentRunningConfig()
-
-			// checking if a configuration file has been provided in the command
-			if len(args) == 0 {
-				log.Fatalln("Configuration file missing. Please provide a valid configuration file.")
-			}
-
-			configFile := args[0]
-			// validating the configuration file
-			isValid, err := isConfigFileValid(configFile)
-			if !isValid {
-				log.Fatalln("Terminating config update: ", err)
-			}
-
-			// checking if the provided configuration file is present.
-			rootPath, _ := os.Getwd()
-			filePath := rootPath + string(os.PathSeparator) + configFile
-			if _, err := os.Stat(filePath); os.IsNotExist(err) {
-				log.Fatalf("The provided configuration file %s is not found.", filePath)
-			}
-
-			// adding/updating the config file
-			config.AddConfigFile(configFile, zero)
 		},
 	}
 )
+
+func loadConfigFromFlags(configParams []string) {
+	for _, param := range configParams {
+		set := strings.Split(param, "=")
+		config.SetEnvVariable(set[0], set[1])
+	}
+}
+
+func loadConfigFromFile(args []string) {
+	configFile := args[0]
+	// validating the configuration file
+	isValid, err := isConfigFileValid(configFile)
+	if !isValid {
+		log.Fatalln("Terminating config update: ", err)
+	}
+
+	// checking if the provided configuration file is present.
+	rootPath, _ := os.Getwd()
+	filePath := rootPath + string(os.PathSeparator) + configFile
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		log.Fatalf("The provided configuration file %s is not found.", filePath)
+	}
+
+	// adding/updating the config file
+	config.AddConfigFile(configFile, zero)
+}
 
 func isConfigFileValid(configFile string) (bool, error) {
 	// read IF0_VERSION, ZERO_VERSION
@@ -98,6 +116,7 @@ func init() {
 	// adding a 'zero' flag to the addConfig command.
 	// default value: false. By default, the configuration is updated to if0.env
 	// upon setting the zero flag, zero cluster configuration is updated
+	addConfigCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
 	addConfigCmd.Flags().BoolVarP(&zero, "zero", "z",
 		false, "updates zero cluster configuration")
 }
