@@ -52,16 +52,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.if0.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.if0.env)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -77,9 +68,9 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with name ".if0" (without extension).
+		// Search config in home directory with type "if0.env".
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".if0")
+		viper.SetConfigName("if0.env")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
