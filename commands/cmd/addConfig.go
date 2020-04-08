@@ -36,6 +36,11 @@ var (
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
 	zero bool
 
+	// merge flag: used to merge the new configuration with current running configuration
+	// default: false, replaces the current configuration
+	// set to true to merge and replace current configuration
+	merge bool
+
 	// set flag: used to set environment variables.
 	// accepts comma separated values. Example: if0 addConfig --set "TESTVAR1=testval1, TESTVAR2-testval2"
 	set []string
@@ -87,7 +92,7 @@ func loadConfigFromFile(args []string) {
 	}
 
 	// adding/updating the config file
-	config.AddConfigFile(configFile, zero)
+	config.AddConfigFile(configFile, zero, merge)
 }
 
 func isConfigFileValid(configFile string) (bool, error) {
@@ -119,4 +124,6 @@ func init() {
 	addConfigCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
 	addConfigCmd.Flags().BoolVarP(&zero, "zero", "z",
 		false, "updates zero cluster configuration")
+	addConfigCmd.Flags().BoolVarP(&merge, "merge", "m",
+		false, "merges the new configuration with running configuration")
 }
