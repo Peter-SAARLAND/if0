@@ -1,14 +1,32 @@
 stages:
   - version
+  - dep
   - build
   - test
   - release
-  
-cache:
-  key: "$CI_JOB_NAME"
 
 variables:
   DOCKER_TLS_CERTDIR: ""
+  PACKAGE_PATH: /go/src/gitlab.com/$CI_PROJECT_PATH
+  
+.go-cache:
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+  cache:
+    paths:
+      - .go/pkg/mod/
+
+.anchors:
+  - &inject-gopath
+      mkdir -p $(dirname ${PACKAGE_PATH})
+      && ln -s ${CI_PROJECT_DIR} ${PACKAGE_PATH}
+      && cd ${PACKAGE_PATH}
+    
+cache:
+  key: "$CI_JOB_NAME"
+
 
 version:
   stage: version
@@ -30,6 +48,39 @@ version:
   except:
     - tags
 
+compile:
+  stage: build
+  image:  golang:1.13
+  script:
+  - (cd /; go get github.com/mitchellh/gox)
+  - GO_FLAGS=-mod=vendor CGO_ENABLED=0 gox -arch=amd64 -os="linux windows darwin" -output="build/{{.OS}}_{{.Arch}}/if0" -ldflags "-X main.version=v$(<.next-version)"
+  - cp build/linux_amd64/if0 .
+  #- go build -mod=vendor ./cmd/gendoc
+  - ./if0 addConfig || true
+  - ./if0 help
+  - echo "RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/if0" > build_info
+  - echo "RELEASE_DESC=\"Linux amd64 binary\"" >> build_info
+  - echo "MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/darwin_amd64/if0" >> build_info
+  - echo "MAC_RELEASE_DESC=\"Darwin amd64 binary\"" >> build_info
+  - echo "WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/windows_amd64/if0.exe" >> build_info
+  - echo "WIN_RELEASE_DESC=\"Windows amd64 binary\"" >> build_info
+  - echo "RELEASE_SHA=$CI_COMMIT_SHA" >> build_info
+  - echo "RELEASE_VERSION=$(<.next-version)" >> build_info
+  artifacts:
+    paths:
+    - if0
+    - build_info
+    #- gendoc
+    - build
+  except:
+  - tags
+
+  
+# build:
+#   stage: build
+#   image:  golang:1.13
+#   script:
+#     - go build -i -v $PACKAGE_PATH
 # build:
 #   stage: build
 #   image: docker:19.03.6
@@ -99,6 +150,10 @@ release version:
     - . release_info
     - release changelog
     - release commit-and-tag CHANGELOG.md release_info
+    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n release -u $RELEASE_URL -d "$RELEASE_DESC"
+    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n release.exe -u $WIN_RELEASE_URL -d "$WIN_RELEASE_DESC"
+    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n release -u $MAC_RELEASE_URL -d "$MAC_RELEASE_DESC"
+  
   only:
     - master
   tags:

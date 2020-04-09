@@ -2,6 +2,69 @@
 
 <!--- next entry here -->
 
+## 0.6.0
+2020-04-09
+
+### Features
+
+- added release URLs (68149852bae01bf410637247f0089e54fd3f7668)
+- wrapup CI (757cbf761a4d3659ae34cbc4af9d29c03c1613b7)
+
+### Fixes
+
+- CI (da7333dc9798f636b55465d3574d3ff4fbe98d6d)
+
+## 0.5.0
+2020-04-09
+
+### Features
+
+- multi-platform build (052c8810f26d84dca86f7711909fb524180b6121)
+- added release URLs (68149852bae01bf410637247f0089e54fd3f7668)
+- wrapup CI (757cbf761a4d3659ae34cbc4af9d29c03c1613b7)
+
+### Fixes
+
+- remove gendoc (29a33e05247341550ee1d1bba2c8a2936b86e662)
+- updated paths (17b50dceffd8267ef8ef760b475e855eb7347d6f)
+- command not implemented yet (46b96b513ead19252993b84c4738846d93156cde)
+
+## 0.5.0
+2020-04-09
+
+### Features
+
+- multi-platform build (052c8810f26d84dca86f7711909fb524180b6121)
+- added release URLs (68149852bae01bf410637247f0089e54fd3f7668)
+
+### Fixes
+
+- fixing error during dir creation (f85b745be074d9a3421a4c106097fd93f8c1bfbd)
+- updating file modes to rdwr (b568fdea1b8dec6e91e19ebfcb91b18f42d7af6e)
+- remove gendoc (29a33e05247341550ee1d1bba2c8a2936b86e662)
+- updated paths (17b50dceffd8267ef8ef760b475e855eb7347d6f)
+- command not implemented yet (46b96b513ead19252993b84c4738846d93156cde)
+
+## 0.5.0
+2020-04-09
+
+### Features
+
+- multi-platform build (052c8810f26d84dca86f7711909fb524180b6121)
+
+### Fixes
+
+- remove gendoc (29a33e05247341550ee1d1bba2c8a2936b86e662)
+- updated paths (17b50dceffd8267ef8ef760b475e855eb7347d6f)
+- command not implemented yet (46b96b513ead19252993b84c4738846d93156cde)
+
+## 0.4.2
+2020-04-09
+
+### Fixes
+
+- updating file modes to rdwr (b568fdea1b8dec6e91e19ebfcb91b18f42d7af6e)
+
 ## 0.4.1
 2020-04-09
 
