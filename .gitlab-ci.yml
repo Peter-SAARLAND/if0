@@ -53,23 +53,23 @@ compile:
   image:  golang:1.13
   script:
   - (cd /; go get github.com/mitchellh/gox)
-  - GO_FLAGS=-mod=vendor CGO_ENABLED=0 gox -arch=amd64 -os="linux windows darwin" -output="build/{{.OS}}_{{.Arch}}/release" -ldflags "-X main.version=v$(<.next-version)"
-  - cp build/linux_amd64/release .
+  - GO_FLAGS=-mod=vendor CGO_ENABLED=0 gox -arch=amd64 -os="linux windows darwin" -output="build/{{.OS}}_{{.Arch}}/if0" -ldflags "-X main.version=v$(<.next-version)"
+  - cp build/linux_amd64/if0 .
   #- go build -mod=vendor ./cmd/gendoc
-  - ./release test-git --list-other-changes || true
-  - ./release test-api
-  - ./release -v
-  - ./release help
-  - echo "RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/release" > build_info
+  - ./if0 addConfig || true
+  - ./if0 -v
+  - ./if0 help
+  - echo "RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/if0" > build_info
   - echo "RELEASE_DESC=\"Linux amd64 binary\"" >> build_info
-  - echo "MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/darwin_amd64/release" >> build_info
+  - echo "MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/darwin_amd64/if0" >> build_info
   - echo "MAC_RELEASE_DESC=\"Darwin amd64 binary\"" >> build_info
-  - echo "WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/windows_amd64/release.exe" >> build_info
+  - echo "WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/windows_amd64/if0.exe" >> build_info
   - echo "WIN_RELEASE_DESC=\"Windows amd64 binary\"" >> build_info
   - echo "RELEASE_SHA=$CI_COMMIT_SHA" >> build_info
   - echo "RELEASE_VERSION=$(<.next-version)" >> build_info
   artifacts:
     paths:
+    - if0
     - release
     - build_info
     #- gendoc
