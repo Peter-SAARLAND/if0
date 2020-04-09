@@ -69,13 +69,11 @@ compile:
   artifacts:
     paths:
     - if0
-    - release
     - build_info
     #- gendoc
     - build
   except:
   - tags
-    
 
 # build:
 #   stage: build
