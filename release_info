@@ -1,4 +1,8 @@
-RELEASE_URL=https://gitlab.com/peter.saarland/if0/-/tags/v0.4.2
-RELEASE_DESC="x86_64 GNU/Linux binary"
-RELEASE_SHA=57b95f25
-RELEASE_VERSION=0.4.2
+RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/505071922/artifacts/if0
+RELEASE_DESC="Linux amd64 binary"
+MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/505071922/artifacts/build/darwin_amd64/if0
+MAC_RELEASE_DESC="Darwin amd64 binary"
+WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/505071922/artifacts/build/windows_amd64/if0.exe
+WIN_RELEASE_DESC="Windows amd64 binary"
+RELEASE_SHA=46b96b513ead19252993b84c4738846d93156cde
+RELEASE_VERSION=0.5.0

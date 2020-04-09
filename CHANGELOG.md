@@ -2,6 +2,19 @@
 
 <!--- next entry here -->
 
+## 0.5.0
+2020-04-09
+
+### Features
+
+- multi-platform build (052c8810f26d84dca86f7711909fb524180b6121)
+
+### Fixes
+
+- remove gendoc (29a33e05247341550ee1d1bba2c8a2936b86e662)
+- updated paths (17b50dceffd8267ef8ef760b475e855eb7347d6f)
+- command not implemented yet (46b96b513ead19252993b84c4738846d93156cde)
+
 ## 0.4.2
 2020-04-09
 
