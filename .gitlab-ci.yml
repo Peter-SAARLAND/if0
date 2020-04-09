@@ -57,7 +57,6 @@ compile:
   - cp build/linux_amd64/if0 .
   #- go build -mod=vendor ./cmd/gendoc
   - ./if0 addConfig || true
-  - ./if0 -v
   - ./if0 help
   - echo "RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/if0" > build_info
   - echo "RELEASE_DESC=\"Linux amd64 binary\"" >> build_info
