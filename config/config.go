@@ -48,7 +48,7 @@ func PrintCurrentRunningConfig() {
 				log.Fatalln("Error while creating .if0 dir: ", err)
 			}
 		}
-		f, err := os.OpenFile(if0File, os.O_CREATE, 0644)
+		f, err := os.OpenFile(if0File, os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			log.Fatalln("Error while creating a new config file: ", err)
 		}
