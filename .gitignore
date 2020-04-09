@@ -39,6 +39,8 @@ ehthumbs.db
 Thumbs.db
 
 # Test binary, built with `go test -c`
+go.mod
+go.sum
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
