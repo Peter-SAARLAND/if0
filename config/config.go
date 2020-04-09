@@ -41,12 +41,14 @@ func PrintCurrentRunningConfig() {
 	present := isFilePresent(if0File)
 	if !present {
 		log.Println("Current running configuration missing. Creating a default if0.env file at ~/.if0")
-		err := os.Mkdir(if0Dir, 0644)
-		if err != nil {
-			log.Fatalln("Error while creating ~/.if0 directory: ", err)
+		if _, err := os.Stat(if0Dir); os.IsNotExist(err) {
+			log.Println("Directory does not exist, creating dir .if0")
+			err = os.Mkdir(if0Dir, os.ModeDir)
+			if err != nil {
+				log.Fatalln("Error while creating .if0 dir: ", err)
+			}
 		}
-		filePath := filepath.Join(if0Dir, if0Default)
-		f, err := os.OpenFile(filePath, os.O_CREATE, 0644)
+		f, err := os.OpenFile(if0File, os.O_CREATE, 0644)
 		if err != nil {
 			log.Fatalln("Error while creating a new config file: ", err)
 		}
