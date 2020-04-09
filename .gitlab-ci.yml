@@ -55,7 +55,7 @@ compile:
   - (cd /; go get github.com/mitchellh/gox)
   - GO_FLAGS=-mod=vendor CGO_ENABLED=0 gox -arch=amd64 -os="linux windows darwin" -output="build/{{.OS}}_{{.Arch}}/release" -ldflags "-X main.version=v$(<.next-version)"
   - cp build/linux_amd64/release .
-  - go build -mod=vendor ./cmd/gendoc
+  #- go build -mod=vendor ./cmd/gendoc
   - ./release test-git --list-other-changes || true
   - ./release test-api
   - ./release -v
@@ -72,7 +72,7 @@ compile:
     paths:
     - release
     - build_info
-    - gendoc
+    #- gendoc
     - build
   except:
   - tags
