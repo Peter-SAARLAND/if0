@@ -1,4 +1,4 @@
-RELEASE_URL=https://gitlab.com/peter.saarland/if0/-/tags/v0.4.1
+RELEASE_URL=https://gitlab.com/peter.saarland/if0/-/tags/v0.4.2
 RELEASE_DESC="x86_64 GNU/Linux binary"
-RELEASE_SHA=dcc36668
-RELEASE_VERSION=0.4.1
+RELEASE_SHA=57b95f25
+RELEASE_VERSION=0.4.2

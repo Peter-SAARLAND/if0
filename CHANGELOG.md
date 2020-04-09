@@ -2,6 +2,13 @@
 
 <!--- next entry here -->
 
+## 0.4.2
+2020-04-09
+
+### Fixes
+
+- updating file modes to rdwr (b568fdea1b8dec6e91e19ebfcb91b18f42d7af6e)
+
 ## 0.4.1
 2020-04-09
 
