@@ -2,6 +2,13 @@
 
 <!--- next entry here -->
 
+## 0.4.1
+2020-04-09
+
+### Fixes
+
+- fixing error during dir creation (f85b745be074d9a3421a4c106097fd93f8c1bfbd)
+
 ## 0.4.0
 2020-04-09
 
