@@ -11,6 +11,7 @@ Usages of **addConfig** command:
 1. `if0 addConfig`
 
     Prints the current running configuration on the console.
+    If there is no current running configuration available, `if0` creates on at `~/.ifo/if0.env`
 2. `if0 addConfig --set varName=varValue`
     
     Updates the environment variable  _varName_ with _varValue_

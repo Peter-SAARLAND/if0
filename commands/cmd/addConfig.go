@@ -85,10 +85,9 @@ func loadConfigFromFile(args []string) {
 	}
 
 	// checking if the provided configuration file is present.
-	rootPath, _ := os.Getwd()
-	filePath := rootPath + string(os.PathSeparator) + configFile
-	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		log.Fatalf("The provided configuration file %s is not found.", filePath)
+	//filePath := filepath.Join(config.if0Dir, configFile)
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		log.Fatalf("The provided configuration file %s is not found.", configFile)
 	}
 
 	// adding/updating the config file

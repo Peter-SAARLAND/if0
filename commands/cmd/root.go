@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -69,7 +70,7 @@ func initConfig() {
 		}
 
 		// Search config in home directory with type "if0.env".
-		viper.AddConfigPath(home)
+		viper.AddConfigPath(filepath.Join(home, ".if0"))
 		viper.SetConfigName("if0.env")
 	}
 
