@@ -2,6 +2,18 @@
 
 <!--- next entry here -->
 
+## 0.6.0
+2020-04-09
+
+### Features
+
+- added release URLs (68149852bae01bf410637247f0089e54fd3f7668)
+- wrapup CI (757cbf761a4d3659ae34cbc4af9d29c03c1613b7)
+
+### Fixes
+
+- CI (da7333dc9798f636b55465d3574d3ff4fbe98d6d)
+
 ## 0.5.0
 2020-04-09
 
