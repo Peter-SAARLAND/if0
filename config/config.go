@@ -15,9 +15,10 @@ const (
 )
 
 var (
-	rootPath, _  = os.Getwd() // TODO: change this to root dir ~
-	envDir       = filepath.Join(rootPath, ".environments")
-	snapshotsDir = filepath.Join(rootPath, ".snapshots")
+	rootPath, _  = os.UserHomeDir()
+	if0Dir       = filepath.Join(rootPath, ".if0")
+	envDir       = filepath.Join(if0Dir, ".environments")
+	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
 )
 
 func SetEnvVariable(key, value string) {
@@ -36,7 +37,25 @@ func GetEnvVariable(key string) string {
 
 // PrintCurrentRunningConfig reads the current running if0/env configuration file and prints it
 func PrintCurrentRunningConfig() {
-	readConfigFile(filepath.Join(rootPath, if0Default))
+	if0File := filepath.Join(if0Dir, if0Default)
+	present := isFilePresent(if0File)
+	if !present {
+		log.Println("Current running configuration missing. Creating a default if0.env file at ~/.if0")
+		err := os.Mkdir(if0Dir, 0644)
+		if err != nil {
+			log.Fatalln("Error while creating ~/.if0 directory: ", err)
+		}
+		filePath := filepath.Join(if0Dir, if0Default)
+		f, err := os.OpenFile(filePath, os.O_CREATE, 0644)
+		if err != nil {
+			log.Fatalln("Error while creating a new config file: ", err)
+		}
+		_, err = f.WriteString("IFO_VERSION=1")
+		if err != nil {
+			log.Fatalln("Error while writing to the new config file: ", err)
+		}
+	}
+	readConfigFile(if0File)
 	allConfig := viper.AllSettings()
 	for key, val := range allConfig {
 		fmt.Println(key, ": ", val)
@@ -50,7 +69,7 @@ func PrintCurrentRunningConfig() {
 func AddConfigFile(srcConfigFile string, zero, merge bool) {
 	runningConfigFile := getRunningConfigFile(srcConfigFile, zero)
 	// taking a backup of the running configuration if already present
-	present := isFilePresent(runningConfigFile, zero)
+	present := isFilePresent(runningConfigFile)
 	if present {
 		err := backupToSnapshots(runningConfigFile)
 		if err != nil {

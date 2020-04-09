@@ -49,7 +49,7 @@ func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	} else {
 		// setting configuration file path to update if0.env configuration
 		log.Println("Updating if0.env configuration with ", srcConfigFile)
-		runningConfigFile = filepath.Join(rootPath, if0Default)
+		runningConfigFile = filepath.Join(if0Dir, if0Default)
 	}
 	return runningConfigFile
 }
@@ -74,9 +74,7 @@ func createConfigFile(srcConfigFile, runningConfigFile string) {
 
 // isFilePresent checks whether the provided config file is already the running config file
 // returns false if no, true if yes.
-func isFilePresent(fileName string, zero bool) bool {
-	//filePath := rootPath + string(os.PathSeparator) + fileName
-	//zeroConfigFilePath := filepath.Join(rootPath, ".environments")
+func isFilePresent(fileName string) bool {
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
 		return false
 	}
