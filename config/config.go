@@ -60,7 +60,7 @@ func PrintCurrentRunningConfig() {
 	readConfigFile(if0File)
 	allConfig := viper.AllSettings()
 	for key, val := range allConfig {
-		fmt.Println(key, ": ", val)
+		fmt.Println(key, ":", val)
 	}
 }
 
@@ -79,6 +79,7 @@ func AddConfigFile(srcConfigFile string, zero, merge bool) {
 		}
 	}
 	if merge {
+		// TODO: for zero cluster configs, check if the file is already present before merging
 		mergeConfigFiles(srcConfigFile, runningConfigFile)
 	} else {
 		createConfigFile(srcConfigFile, runningConfigFile)
