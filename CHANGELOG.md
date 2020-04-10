@@ -2,6 +2,18 @@
 
 <!--- next entry here -->
 
+## 0.7.0
+2020-04-10
+
+### Features
+
+- including unit test cases (0345c229be4c7009c9338a4b7ac25e0cc59799fd)
+
+### Fixes
+
+- including Development Report for week Apr1 to Apr9 (36094e58ec0e7a591302bdc6dfd8808072e1d0e2)
+- minor formatting changes (78468673f0f92875b08770aedc4d870a7a1b44e9)
+
 ## 0.6.0
 2020-04-09
 
