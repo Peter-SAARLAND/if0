@@ -31,7 +31,8 @@ func writeToConfigFile(runningConfigFile string, currentConfigMap map[string]int
 	s := strings.Join(lines, "\n")
 	err := ioutil.WriteFile(runningConfigFile, []byte(s), 0644)
 	if err != nil {
-		log.Fatal("Error while merging config files: ", err)
+		log.Errorln("Error while merging config files: ", err)
+		return
 	}
 }
 
@@ -49,7 +50,7 @@ func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	} else {
 		// setting configuration file path to update if0.env configuration
 		log.Println("Updating if0.env configuration with ", srcConfigFile)
-		runningConfigFile = filepath.Join(if0Dir, if0Default)
+		runningConfigFile = if0Default
 	}
 	return runningConfigFile
 }
@@ -59,17 +60,20 @@ func readConfigFile(configFile string) {
 	viper.SetConfigFile(configFile)
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Fatalln("Error while reading config file: ", err)
+		log.Errorln("Error while reading config file: ", err)
+		return
 	}
 }
 
 // createConfigFile creates a new running config file from the provided config file (src)
-func createConfigFile(srcConfigFile, runningConfigFile string) {
+func createConfigFile(srcConfigFile, runningConfigFile string) error {
 	readConfigFile(srcConfigFile)
 	err := viper.WriteConfigAs(runningConfigFile)
 	if err != nil {
-		log.Fatalln("Failed to add/update the config file: ", err)
+		log.Errorln("Failed to add/update the config file: ", err)
+		return err
 	}
+	return nil
 }
 
 // isFilePresent checks whether the provided config file is already the running config file
