@@ -2,6 +2,19 @@
 
 <!--- next entry here -->
 
+## 0.8.0
+2020-04-15
+
+### Features
+
+- including logic to merge config files (6a38da056736d4c90e1a00fb79663ad9fab92c02)
+- including logic for garbage collection (49bd62f4547c02d74984dee25cdb3eca6810f6d0)
+
+### Fixes
+
+- fixing import in test file (5cd85b974174557f6d0229376faa356116113fcc)
+- adding comments (06916a3037d6d384f73f403d6eac36400a02147b)
+
 ## 0.7.0
 2020-04-15
 

@@ -1,8 +1,8 @@
-RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512232404/artifacts/if0
+RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512325593/artifacts/if0
 RELEASE_DESC="Linux amd64 binary"
-MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512232404/artifacts/build/darwin_amd64/if0
+MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512325593/artifacts/build/darwin_amd64/if0
 MAC_RELEASE_DESC="Darwin amd64 binary"
-WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512232404/artifacts/build/windows_amd64/if0.exe
+WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/17826864/jobs/512325593/artifacts/build/windows_amd64/if0.exe
 WIN_RELEASE_DESC="Windows amd64 binary"
-RELEASE_SHA=c6c98d4cf212bb4f64c63c71715c8ad90ca37069
+RELEASE_SHA=2600134b69361c5277682756bb6beafa2cd7da24
 RELEASE_VERSION=0.8.0
