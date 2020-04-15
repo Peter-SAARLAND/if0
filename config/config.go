@@ -155,6 +155,9 @@ func IsConfigFileValid(configFile string, zero bool) (bool, error) {
 	return true, nil
 }
 
+// GarbageCollection automatically cleans up backed-up files in the ~/.if0/.snapshots directory
+// requires env variables GC_AUTO and GC_PERIOD to be set.
+// By default, GC_AUTO=false, GC_PERIOD=30 (days)
 func GarbageCollection() {
 	gc, gcPeriod := getGcPeriod()
 	if gc {
