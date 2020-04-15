@@ -26,6 +26,21 @@ This week was all about adding more features to [the CLI prototype](https://gitl
 ## Learning
 
 * Setting up a CI job to display test coverage results in the pipeline.
+    
+    Include the following job in the `.gitlab-ci.yml` file:
+    
+>      unit-tests:
+>        image: golang:1.14
+>        stage: test
+>        script:
+>          - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
+>          - go tool cover -func=coverage.out
+
+ 
+
+Reference: https://penkovski.com/post/gitlab-golang-test-coverage/
+    
+
 
 ## Bugfixes
 None
