@@ -1,5 +1,5 @@
 stages:
-  - version
+  - fetch-version
   - dep
   - build
   - test
@@ -27,26 +27,56 @@ variables:
 cache:
   key: "$CI_JOB_NAME"
 
-
-version:
-  stage: version
-  image: registry.gitlab.com/juhani/go-semrel-gitlab:v0.21.1
+fetch-semantic-version:
+  # Requires Node >= 10.13 version
+  image: node:13
+  stage: fetch-version
+  only:
+    refs:
+    - master
+    - alpha
+    - /^(([0-9]+)\.)?([0-9]+)\.x/ # This matches maintenance branches
+    - /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/ # This matches pre-releases
   script:
-    #- printenv
-    - release test-git || true
-    - release test-api
-    - release next-version --allow-current
-    - release next-version --allow-current > .next-version
-    - echo "RELEASE_URL=$CI_PROJECT_URL/-/tags/v$(<.next-version)" > build_info
-    - echo "RELEASE_DESC=\"$(uname -mo) binary\"" >> build_info
-    - echo "RELEASE_SHA=$CI_COMMIT_SHORT_SHA" >> build_info
-    - echo "RELEASE_VERSION=$(<.next-version)" >> build_info
+    - npm install @semantic-release/gitlab @semantic-release/exec
+    - npx semantic-release --generate-notes false --dry-run
   artifacts:
     paths:
-    - .next-version
-    - build_info
+    - VERSION.txt
+
+generate-non-semantic-version:
+  stage: fetch-version
   except:
-    - tags
+    refs:
+    - master
+    - alpha
+    - /^(([0-9]+)\.)?([0-9]+)\.x/ # This matches maintenance branches
+    - /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/ # This matches pre-releases
+  script:
+    - echo build-$CI_PIPELINE_ID > VERSION.txt
+  artifacts:
+    paths:
+    - VERSION.txt
+
+# version:
+#   stage: version
+#   image: registry.gitlab.com/juhani/go-semrel-gitlab:v0.21.1
+#   script:
+#     #- printenv
+#     - release test-git || true
+#     - release test-api
+#     - release next-version --allow-current
+#     - release next-version --allow-current > .next-version
+#     - echo "RELEASE_URL=$CI_PROJECT_URL/-/tags/v$(<.next-version)" > build_info
+#     - echo "RELEASE_DESC=\"$(uname -mo) binary\"" >> build_info
+#     - echo "RELEASE_SHA=$CI_COMMIT_SHORT_SHA" >> build_info
+#     - echo "RELEASE_VERSION=$(<.next-version)" >> build_info
+#   artifacts:
+#     paths:
+#     - .next-version
+#     - build_info
+#   except:
+#     - tags
 
 compile:
   stage: build
@@ -58,14 +88,6 @@ compile:
   #- go build -mod=vendor ./cmd/gendoc
   - ./if0 addConfig || true
   - ./if0 help
-  - echo "RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/if0" > build_info
-  - echo "RELEASE_DESC=\"Linux amd64 binary\"" >> build_info
-  - echo "MAC_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/darwin_amd64/if0" >> build_info
-  - echo "MAC_RELEASE_DESC=\"Darwin amd64 binary\"" >> build_info
-  - echo "WIN_RELEASE_URL=https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/jobs/$CI_JOB_ID/artifacts/build/windows_amd64/if0.exe" >> build_info
-  - echo "WIN_RELEASE_DESC=\"Windows amd64 binary\"" >> build_info
-  - echo "RELEASE_SHA=$CI_COMMIT_SHA" >> build_info
-  - echo "RELEASE_VERSION=$(<.next-version)" >> build_info
   artifacts:
     paths:
     - if0
@@ -75,6 +97,15 @@ compile:
   except:
   - tags
 
+include:
+  - template: Container-Scanning.gitlab-ci.yml
+
+unit-tests:
+  image: golang:1.14
+  stage: test
+  script:
+    - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
+    - go tool cover -func=coverage.out
 
 # build:
 #   stage: build
@@ -141,27 +172,35 @@ compile:
 #   only:
 #     - master
 
-release version:
-  stage: release
-  image: registry.gitlab.com/juhani/go-semrel-gitlab:v0.21.1
-  script:
-    - rm -f release_info
-    - mv build_info release_info
-    - . release_info
-    - release changelog
-    - release commit-and-tag CHANGELOG.md release_info
-    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0 -u $RELEASE_URL -d "$RELEASE_DESC"
-    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0.exe -u $WIN_RELEASE_URL -d "$WIN_RELEASE_DESC"
-    - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0 -u $MAC_RELEASE_URL -d "$MAC_RELEASE_DESC"
-  
-  only:
-    - master
-  tags:
-    - build
 
-unit-tests:
-  image: golang:1.14
-  stage: test
+release:
+  image: node:13
+  stage: release
+  only:
+    refs:
+    - master
+    - alpha
+    # This matches maintenance branches
+    - /^(([0-9]+)\.)?([0-9]+)\.x/
+    # This matches pre-releases
+    - /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
   script:
-    - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
-    - go tool cover -func=coverage.out
+    - npm install @semantic-release/gitlab @semantic-release/exec
+    - npx semantic-release
+
+# release version:
+#   stage: release
+#   image: registry.gitlab.com/juhani/go-semrel-gitlab:v0.21.1
+#   script:
+#     - rm -f release_info
+#     - mv build_info release_info
+#     - . release_info
+#     - release changelog
+#     - release commit-and-tag CHANGELOG.md release_info
+#     - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0 -u $RELEASE_URL -d "$RELEASE_DESC"
+#     - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0.exe -u $WIN_RELEASE_URL -d "$WIN_RELEASE_DESC"
+#     - release --ci-commit-tag v$RELEASE_VERSION add-download-link -n if0 -u $MAC_RELEASE_URL -d "$MAC_RELEASE_DESC"
+#   only:
+#     - master
+#   tags:
+#     - build
