@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
@@ -188,3 +187,39 @@ func TestMergeConfigFilesNoSrc(t *testing.T) {
 	assert.Equal(t, "Please provide valid source/destination configuration files for merge.", err.Error())
 }
 
+func TestGarbageCollectionNo(t *testing.T) {
+	if0Dir = "testif0"
+	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	SetEnvVariable("GC_AUTO", "No")
+	SetEnvVariable("GC_PERIOD", "0")
+	GarbageCollection()
+	f, _ := ioutil.ReadDir(snapshotsDir)
+	assert.NotEqual(t, 0, len(f))
+}
+
+func TestGarbageCollection(t *testing.T) {
+	if0Dir = "testif0"
+	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	SetEnvVariable("GC_AUTO", "Yes")
+	SetEnvVariable("GC_PERIOD", "0")
+	GarbageCollection()
+	f, _ := ioutil.ReadDir(snapshotsDir)
+	assert.Equal(t, 0, len(f))
+}
+
+func TestParseGcAutoStr(t *testing.T) {
+	assert.Equal(t, true, parseGcAuto("1"))
+	assert.Equal(t, true, parseGcAuto("true"))
+	assert.Equal(t, true, parseGcAuto("t"))
+	assert.Equal(t, true, parseGcAuto("TRUE"))
+	assert.Equal(t, true, parseGcAuto("True"))
+	assert.Equal(t, true, parseGcAuto("yes"))
+	assert.Equal(t, true, parseGcAuto("YES"))
+	assert.Equal(t, false, parseGcAuto("0"))
+	assert.Equal(t, false, parseGcAuto("false"))
+	assert.Equal(t, false, parseGcAuto("f"))
+	assert.Equal(t, false, parseGcAuto("False"))
+	assert.Equal(t, false, parseGcAuto("FALSE"))
+	assert.Equal(t, false, parseGcAuto("no"))
+	assert.Equal(t, false, parseGcAuto("NO"))
+}

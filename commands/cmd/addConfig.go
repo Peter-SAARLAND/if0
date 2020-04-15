@@ -71,6 +71,9 @@ var (
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
 			config.PrintCurrentRunningConfig()
+
+			// automatic garbage collection
+			config.GarbageCollection()
 		},
 	}
 )
