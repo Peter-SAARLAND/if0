@@ -16,19 +16,13 @@ limitations under the License.
 package cmd
 
 import (
-	"errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"if0/config"
 	"os"
 	"strings"
 )
 
-const (
-	IFO_VERSION  = "IF0_VERSION"
-	ZERO_VERSION = "ZERO_VERSION"
-)
 
 var (
 	// zero flag: used to distinguish between if0 and zero-cluster configuration files.
@@ -41,10 +35,13 @@ var (
 	// set to true to merge and replace current configuration
 	merge bool
 
+	src string
+
+	dst string
+
 	// set flag: used to set environment variables.
 	// accepts comma separated values. Example: if0 addConfig --set "TESTVAR1=testval1, TESTVAR2-testval2"
 	set []string
-
 
 	// addConfigCmd represents the addConfig command
 	addConfigCmd = &cobra.Command{
@@ -57,6 +54,15 @@ var (
 				log.Println("Reading environment variables from flag --set")
 				loadConfigFromFlags(set)
 			}
+
+			if merge {
+				err := config.MergeConfigFiles(src, dst, zero)
+				if err != nil {
+					log.Errorln(err)
+					return
+				}
+			}
+
 			// checking if a configuration file has been provided in the command
 			if len(args) != 0 {
 				log.Debugln("Updating configuration")
@@ -65,6 +71,9 @@ var (
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
 			config.PrintCurrentRunningConfig()
+
+			// automatic garbage collection
+			config.GarbageCollection()
 		},
 	}
 )
@@ -79,39 +88,24 @@ func loadConfigFromFlags(configParams []string) {
 func loadConfigFromFile(args []string) {
 	configFile := args[0]
 	// validating the configuration file
-	isValid, err := isConfigFileValid(configFile)
+	isValid, err := config.IsConfigFileValid(configFile, zero)
 	if !isValid {
-		log.Fatalln("Terminating config update: ", err)
+		log.Errorln("Terminating config update: ", err)
+		return
 	}
 
 	// checking if the provided configuration file is present.
 	//filePath := filepath.Join(config.if0Dir, configFile)
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		log.Fatalf("The provided configuration file %s is not found.", configFile)
+		log.Errorf("The provided configuration file %s is not found.", configFile)
+		return
 	}
 
 	// adding/updating the config file
-	config.AddConfigFile(configFile, zero, merge)
-}
-
-func isConfigFileValid(configFile string) (bool, error) {
-	// read IF0_VERSION, ZERO_VERSION
-	viper.SetConfigFile(configFile)
-	err := viper.ReadInConfig()
+	err = config.AddConfigFile(configFile, zero)
 	if err != nil {
-		log.Fatalln("Error while reading config file: ", err)
+		log.Errorln(err)
 	}
-	if0Version := viper.IsSet(IFO_VERSION)
-	zeroVersion := viper.IsSet(ZERO_VERSION)
-
-	if !if0Version && !zeroVersion {
-		return false, errors.New("no valid versions (IF0_VERSION or ZERO_VERSION) found in the config file")
-	} else if if0Version && zero {
-		return false, errors.New("zero-cluster config update invoked with if0.env config file")
-	} else if zeroVersion && !zero {
-		return false, errors.New("if0.env update invoked with zero-cluster config file")
-	}
-	return true, nil
 }
 
 func init() {
@@ -125,4 +119,6 @@ func init() {
 		false, "updates zero cluster configuration")
 	addConfigCmd.Flags().BoolVarP(&merge, "merge", "m",
 		false, "merges the new configuration with running configuration")
+	addConfigCmd.Flags().StringVar(&src, "src", "", "source configuration file for merge")
+	addConfigCmd.Flags().StringVar(&dst, "dst", "", "destination configuration file to merge with")
 }

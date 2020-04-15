@@ -23,3 +23,15 @@ Usages of **addConfig** command:
 4. `if0 addConfig path/to/configFile.env`
 
     Takes a backup of the current running configuration file (`if0.env`), and replaces it with the configuration from `configFile.env`
+    
+5. `if0 addConfig --merge --src=SRC_CONFIG.env [--dst=DST_CONFIG.env]`
+    
+    `--merge` or `-m`
+
+    Takes a backup of `if0.env` and then merges it with configuration from `SRC_CONFIG.env` 
+    
+    `--dst` flag is optional. By default, `if0.env` file is chosen.
+    
+    This command can also be used to merge zero-cluster configuration files with the use of `--zero` or `-z`flag. 
+    
+    `--dst` flag is again optional; in this case, `dst` file name is assumed to be the same as the `src` config file name. This requires the user to know the destination file name.

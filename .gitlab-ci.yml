@@ -158,3 +158,10 @@ release version:
     - master
   tags:
     - build
+
+unit-tests:
+  image: golang:1.14
+  stage: test
+  script:
+    - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
+    - go tool cover -func=coverage.out
