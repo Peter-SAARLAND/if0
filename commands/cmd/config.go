@@ -23,29 +23,32 @@ import (
 	"strings"
 )
 
-
 var (
 	// zero flag: used to distinguish between if0 and zero-cluster configuration files.
 	// default: false, for if0
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
 	zero bool
 
+	add string
+
 	// merge flag: used to merge the new configuration with current running configuration
 	// default: false, replaces the current configuration
 	// set to true to merge and replace current configuration
 	merge bool
 
+	// src flag: used to input the configuration file that needs to be merged
 	src string
 
+	// dst file: destination configuration file (in .environments dir, or if0.env file) to be merged with
 	dst string
 
 	// set flag: used to set environment variables.
 	// accepts comma separated values. Example: if0 addConfig --set "TESTVAR1=testval1, TESTVAR2-testval2"
 	set []string
 
-	// addConfigCmd represents the addConfig command
-	addConfigCmd = &cobra.Command{
-		Use:   "addConfig",
+	// configCmd represents the addConfig command
+	configCmd = &cobra.Command{
+		Use:   "config",
 		Short: "adds/modifies running configuration files of if0 or zero clusters",
 		Long: `if0 is a CLI tool for zero. 
 		It has features to add or update configuration for if0 or for zero-clusters`,
@@ -64,9 +67,9 @@ var (
 			}
 
 			// checking if a configuration file has been provided in the command
-			if len(args) != 0 {
+			if add != "" {
 				log.Debugln("Updating configuration")
-				loadConfigFromFile(args)
+				loadConfigFromFile(add)
 			}
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
@@ -85,8 +88,7 @@ func loadConfigFromFlags(configParams []string) {
 	}
 }
 
-func loadConfigFromFile(args []string) {
-	configFile := args[0]
+func loadConfigFromFile(configFile string) {
 	// validating the configuration file
 	isValid, err := config.IsConfigFileValid(configFile, zero)
 	if !isValid {
@@ -109,16 +111,17 @@ func loadConfigFromFile(args []string) {
 }
 
 func init() {
-	rootCmd.AddCommand(addConfigCmd)
+	rootCmd.AddCommand(configCmd)
 
 	// adding a 'zero' flag to the addConfig command.
 	// default value: false. By default, the configuration is updated to if0.env
 	// upon setting the zero flag, zero cluster configuration is updated
-	addConfigCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
-	addConfigCmd.Flags().BoolVarP(&zero, "zero", "z",
+	configCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
+	configCmd.Flags().BoolVarP(&zero, "zero", "z",
 		false, "updates zero cluster configuration")
-	addConfigCmd.Flags().BoolVarP(&merge, "merge", "m",
+	configCmd.Flags().BoolVarP(&merge, "merge", "m",
 		false, "merges the new configuration with running configuration")
-	addConfigCmd.Flags().StringVar(&src, "src", "", "source configuration file for merge")
-	addConfigCmd.Flags().StringVar(&dst, "dst", "", "destination configuration file to merge with")
+	configCmd.Flags().StringVar(&add, "add", "", "configuration file to be added or updated")
+	configCmd.Flags().StringVar(&src, "src", "", "source configuration file for merge")
+	configCmd.Flags().StringVar(&dst, "dst", "", "destination configuration file to merge with")
 }

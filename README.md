@@ -6,25 +6,26 @@
 
 To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. This creates an executable in the GOPATH `bin` directory.
 
-Usages of **addConfig** command:
+Usages of **config** command:
 
-1. `if0 addConfig`
+1. `if0 config`
 
     Prints the current running configuration on the console.
     If there is no current running configuration available, `if0` creates on at `~/.ifo/if0.env`
-2. `if0 addConfig --set varName=varValue`
+2. `if0 config --set varName=varValue`
     
     Updates the environment variable  _varName_ with _varValue_
     
-    Multiple variables can also be set using comma-separated key-value pairs. For example: `if0 addConfig --set "varName1=varValue1,varName2=varValue2"`
-3. `varName=varValue if0 addConfig <args>`
+    Multiple variables can also be set using comma-separated key-value pairs. For example: `if0 config --set "varName1=varValue1,varName2=varValue2"`
+3. `varName=varValue if0 config <args>`
 
     Updates the variable _varName_ with value _varValue_ before running the `if0` command 
-4. `if0 addConfig path/to/configFile.env`
+4. `if0 config --add=path/to/configFile.env` or `if0 config -z --add=path/to/configFile.env`
 
     Takes a backup of the current running configuration file (`if0.env`), and replaces it with the configuration from `configFile.env`
     
-5. `if0 addConfig --merge --src=SRC_CONFIG.env [--dst=DST_CONFIG.env]`
+    `-z` or `--zero` adds or updates the config file in `~/.ifo/.environments` directory
+5. `if0 config --merge --src=SRC_CONFIG.env [--dst=DST_CONFIG.env]`
     
     `--merge` or `-m`
 
