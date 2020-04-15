@@ -91,7 +91,6 @@ compile:
   artifacts:
     paths:
     - if0
-    - build_info
     #- gendoc
     - build
   except:
