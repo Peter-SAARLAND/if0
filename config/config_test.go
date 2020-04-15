@@ -12,7 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	exitVal := m.Run()
-	log.Println("Teardown")
+	fmt.Println("Teardown")
 	err := os.RemoveAll("testif0")
 	if err != nil {
 		fmt.Println(err)
