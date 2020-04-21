@@ -29,6 +29,7 @@ var (
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
 	zero bool
 
+	// add flag: used to add new or update configuration files.
 	add string
 
 	// merge flag: used to merge the new configuration with current running configuration
@@ -45,6 +46,11 @@ var (
 	// set flag: used to set environment variables.
 	// accepts comma separated values. Example: if0 addConfig --set "TESTVAR1=testval1, TESTVAR2-testval2"
 	set []string
+
+	//sync flag: used to sync with an external repository.
+	//used in conjunction with REMOTE_STORAGE (git repository link) and
+	//REPO_SYNC (bool value) variables
+	sync bool
 
 	// configCmd represents the addConfig command
 	configCmd = &cobra.Command{
@@ -70,6 +76,13 @@ var (
 			if add != "" {
 				log.Debugln("Updating configuration")
 				loadConfigFromFile(add)
+			}
+
+			if sync {
+				err := config.RepoSync()
+				if err != nil {
+					log.Errorln(err)
+				}
 			}
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
@@ -124,4 +137,6 @@ func init() {
 	configCmd.Flags().StringVar(&add, "add", "", "configuration file to be added or updated")
 	configCmd.Flags().StringVar(&src, "src", "", "source configuration file for merge")
 	configCmd.Flags().StringVar(&dst, "dst", "", "destination configuration file to merge with")
+	configCmd.Flags().BoolVar(&sync, "sync",
+		false, "used to sync with an external repository")
 }
