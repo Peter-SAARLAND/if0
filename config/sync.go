@@ -18,6 +18,7 @@ import (
 	"syscall"
 )
 
+// RepoSync is used to synchronize the if0 configuration files with remote git repository
 func RepoSync() error {
 	fmt.Println("all: ", viper.AllSettings())
 	remoteStorage := GetEnvVariable("REMOTE_STORAGE")
@@ -34,100 +35,62 @@ func RepoSync() error {
 }
 
 func gitSync(remoteStorage string) error {
+	// get authorization
+	// if the git sync is via HTTPS, then fetch username-password credentials
+	// if the git sync is via SSH, then parse .ppk file
+	var auth transport.AuthMethod
+	var err error
+	if strings.Contains(remoteStorage, "http") {
+		auth, err = getHttpAuth()
+		if err != nil {
+			log.Errorln("Error while fetching credentials: ", err)
+			return err
+		}
+	} else if strings.Contains(remoteStorage, "git@") {
+		auth, err = getSSHAuth()
+		if err != nil {
+			log.Errorln("Error while fetching credentials: ", err)
+			return err
+		}
+	}
+
 	// check if the repo is already present
+	// if not, do a git clone
+	// else, do a git pull
 	repoDir := filepath.Join(if0Dir, "if0")
 	if _, err := os.Stat(repoDir); os.IsNotExist(err) {
 		log.Debugln("Directory does not exist, creating dir for if0 repository")
 		_ = os.Mkdir(repoDir, os.ModeDir)
-		if strings.Contains(remoteStorage, "http") {
-			err := gitHttpsClone(remoteStorage, repoDir)
-			if err != nil {
-				return err
-			}
-		} else if strings.Contains(remoteStorage, "git@") {
-			err := gitSSHClone(remoteStorage, repoDir)
-			if err != nil {
-				return err
-			}
+		_, err = gitClone(remoteStorage, auth, repoDir)
+		if err != nil {
+			log.Errorln("Error during git clone: ", err)
+			return err
 		}
 	} else {
-		// git pull logic
-		var auth transport.AuthMethod
-		if strings.Contains(remoteStorage, "http") {
-			auth, err = getHttpAuthCredentials()
-			if err != nil {
-				log.Errorln("Error while fetching credentials: ", err)
-				return err
-			}
-		} else if strings.Contains(remoteStorage, "git@") {
-			auth, err = getSSHAuth()
-			if err != nil {
-				log.Errorln("Error while fetching credentials: ", err)
-				return err
-			}
+		err := gitPull(auth)
+		if err != nil {
+			log.Errorln("Error during git pull: ", err)
+			return err
 		}
-		gitPull(auth)
 	}
 	return nil
 }
 
-func gitPull(auth transport.AuthMethod) {
+func gitPull(auth transport.AuthMethod) error {
 	r, err := git.PlainOpen(filepath.Join(if0Dir, "if0"))
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	// Get the working directory for the repository
 	w, err := r.Worktree()
 	if err != nil {
-		log.Println(err)
+		return err
 	}
 
 	// Pull the latest changes from the origin remote and merge into the current branch
 	log.Println("git pull origin")
 	err = w.Pull(&git.PullOptions{RemoteName: "origin", Auth: auth})
-	if err != nil {
-		log.Println(err)
-	}
-}
-
-func gitSSHClone(remoteStorage string, repoDir string) error {
-	auth, err := getSSHAuth()
-	if err != nil {
-		return err
-	}
-	_, err = gitClone(remoteStorage, auth, repoDir)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getSSHAuth() (*gitssh.PublicKeys, error) {
-	sshKeyPath := GetEnvVariable("SSH_KEY_PATH")
-	sshKey, err := ioutil.ReadFile(sshKeyPath)
-	if err != nil {
-		fmt.Println("ssh err: ", err)
-		return nil, err
-	}
-	passphrase := getPassphrase()
-	signer, err := ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
-	if err != nil {
-		fmt.Println("signer err: ", err)
-		return nil, err
-	}
-	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
-	return auth, nil
-}
-
-func gitHttpsClone(remoteStorage string, repoDir string) error {
-	auth, err := getHttpAuthCredentials()
-	if err != nil {
-		log.Errorln("Error while fetching credentials: ", err)
-		return err
-	}
-	log.Printf("Cloning from %s at %s\n", remoteStorage, repoDir)
-	_, err = gitClone(remoteStorage, auth, repoDir)
 	if err != nil {
 		return err
 	}
@@ -145,7 +108,7 @@ func gitClone(remoteStorage string, auth transport.AuthMethod, dir string) (*git
 	return r, nil
 }
 
-func getHttpAuthCredentials() (transport.AuthMethod, error) {
+func getHttpAuth() (transport.AuthMethod, error) {
 	fmt.Println("Enter Username: ")
 	userName, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
@@ -158,6 +121,23 @@ func getHttpAuthCredentials() (transport.AuthMethod, error) {
 	}
 	auth := &http.BasicAuth{Username: string(userName), Password: string(bytePassword)}
 	return auth, err
+}
+
+func getSSHAuth() (*gitssh.PublicKeys, error) {
+	sshKeyPath := GetEnvVariable("SSH_KEY_PATH")
+	sshKey, err := ioutil.ReadFile(sshKeyPath)
+	if err != nil {
+		fmt.Println("ssh err: ", err)
+		return nil, err
+	}
+	passphrase := getPassphrase()
+	signer, err := ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
+	if err != nil {
+		fmt.Println("signer err: ", err)
+		return nil, err
+	}
+	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
+	return auth, nil
 }
 
 func getPassphrase() []byte {
