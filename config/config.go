@@ -28,6 +28,7 @@ var (
 	if0Default   = filepath.Join(if0Dir, "if0.env")
 )
 
+// SetEnvVariable sets a config variable
 func SetEnvVariable(key, value string) {
 	key = strings.TrimSpace(key)
 	value = strings.TrimSpace(value)
@@ -37,6 +38,7 @@ func SetEnvVariable(key, value string) {
 	}
 }
 
+// GetEnvVariable retrieves the value of a config variable
 func GetEnvVariable(key string) string {
 	val := viper.Get(key)
 	return cast.ToString(val)
@@ -96,6 +98,10 @@ func AddConfigFile(srcConfigFile string, zero bool) error {
 	return nil
 }
 
+// MergeConfigFiles merges configuration at dst with configuration from source.
+// it first gets a valid dst file path to be merged with
+// if the file is present, the dst file is backed-up in the .snapshots directory
+// and then merged with the src config file
 func MergeConfigFiles(src, dst string, zero bool) error {
 	if src == "" {
 		return errors.New("Please provide valid source/destination configuration files for merge.")
@@ -121,20 +127,9 @@ func MergeConfigFiles(src, dst string, zero bool) error {
 	return nil
 }
 
-func getDstFileForMerge(src string, dst string, zero bool) string {
-	// setting dst path for zero configuration files
-	if zero {
-		if dst == "" {
-			dst = filepath.Join(envDir, filepath.Base(src))
-		} else {
-			dst = filepath.Join(envDir, filepath.Base(dst))
-		}
-	} else {
-		dst = if0Default
-	}
-	return dst
-}
-
+// IsConfigFileValid checks if the provided configuration file is valid for the config add/update operation.
+// valid if0.env files contain IF0_VERSION key
+// valid zero-cluster files contain ZERO_VERSION key
 func IsConfigFileValid(configFile string, zero bool) (bool, error) {
 	// read IF0_VERSION, ZERO_VERSION
 	viper.SetConfigFile(configFile)
@@ -167,7 +162,7 @@ func GarbageCollection() {
 			return
 		}
 		for _, f := range files {
-			creationTime := getCreationTome(f)
+			creationTime := getCreationTime(f)
 			diff := time.Now().Sub(creationTime).Hours() / 24
 			if int(diff) >= gcPeriod {
 				_ = os.Remove(filepath.Join(snapshotsDir, f.Name()))
@@ -176,7 +171,9 @@ func GarbageCollection() {
 	}
 }
 
-func getCreationTome(f os.FileInfo) time.Time {
+// getCreationTime returns the time of creation of a file
+// if the time of creation is not available, it returns last modified time
+func getCreationTime(f os.FileInfo) time.Time {
 	var creationTime time.Time
 	t, err := times.Stat(filepath.Join(snapshotsDir, f.Name()))
 	if err != nil {
@@ -190,6 +187,9 @@ func getCreationTome(f os.FileInfo) time.Time {
 	return creationTime
 }
 
+// getGcPeriod retrieves GC_AUTO and GC_PERIOD from if0.env or environment variables.
+// for GC_AUTO = true, automatic garbage collection is triggered,
+// files older than GC_PERIOD are deleted
 func getGcPeriod() (bool, int) {
 	readConfigFile(if0Default)
 	gcAutoStr := GetEnvVariable("GC_AUTO")
@@ -209,6 +209,9 @@ func getGcPeriod() (bool, int) {
 	return false, 0
 }
 
+// parseGcAuto parses GC_AUTO variable for values:
+// t, true, True, TRUE, yes, Yes, YES, 1
+// f, false, False, FALSE, no, No, NO, 0
 func parseGcAuto(gcAutoStr string) bool {
 	var gcAuto bool
 	if strings.ToLower(gcAutoStr) == "yes" {
