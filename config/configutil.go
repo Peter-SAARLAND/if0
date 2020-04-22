@@ -12,17 +12,39 @@ import (
 	"time"
 )
 
-func mergeConfigFiles(srcConfigFile , runningConfigFile string) {
-	readConfigFile(runningConfigFile)
+// getDstFileForMerge returns dst filepath based on zero flag.
+// for zero = true, if dst is not provided, dst file name is set to src file name,
+// and looked-up in the .environments directory
+// if zero is set to false, the src and dst files are the same - if0.env
+func getDstFileForMerge(src string, dst string, zero bool) string {
+	// setting dst path for zero configuration files
+	if zero {
+		if dst == "" {
+			dst = filepath.Join(envDir, filepath.Base(src))
+		} else {
+			dst = filepath.Join(envDir, filepath.Base(dst))
+		}
+	} else {
+		dst = if0Default
+	}
+	return dst
+}
+
+// mergeConfigFiles combines configuration from source .env file with configuration in the destination .env file
+// For config keys that are already present, the values are updated from source .env file
+func mergeConfigFiles(srcConfigFile, dstConfigFile string) {
+	readConfigFile(dstConfigFile)
 	currentConfigMap := viper.AllSettings()
 	readConfigFile(srcConfigFile)
 	newConfigMap := viper.AllSettings()
 	for k, v := range newConfigMap {
 		currentConfigMap[k] = v
 	}
-	writeToConfigFile(runningConfigFile, currentConfigMap)
+	writeToConfigFile(dstConfigFile, currentConfigMap)
 }
 
+// writeToConfigFile is used to merge config files.
+// key-value pairs from currentConfigMap written to the current running config file
 func writeToConfigFile(runningConfigFile string, currentConfigMap map[string]interface{}) {
 	var lines []string
 	for key, val := range currentConfigMap {
@@ -36,6 +58,9 @@ func writeToConfigFile(runningConfigFile string, currentConfigMap map[string]int
 	}
 }
 
+// getRunningConfigFile returns the configuration file to be backed-up and updated
+// if the zero flag is set to true, configuration from .environments directory is set as the running config file
+// if the zero flag is set to false, if0.env is set as the running configuration file
 func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	var runningConfigFile string
 	if zero {
@@ -104,4 +129,3 @@ func backupToSnapshots(fileName string) error {
 	}
 	return nil
 }
-

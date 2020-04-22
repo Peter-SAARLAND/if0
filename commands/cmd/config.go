@@ -33,8 +33,10 @@ var (
 	add string
 
 	// merge flag: used to merge the new configuration with current running configuration
-	// default: false, replaces the current configuration
+	// default: false
 	// set to true to merge and replace current configuration
+	// the file in --src is merged with file in --dst.
+	// --dst is optional
 	merge bool
 
 	// src flag: used to input the configuration file that needs to be merged
@@ -64,6 +66,8 @@ var (
 				loadConfigFromFlags(set)
 			}
 
+			// if --merge is true, the file in --src is merged with file in --dst.
+			// --dst is optional
 			if merge {
 				err := config.MergeConfigFiles(src, dst, zero)
 				if err != nil {
@@ -94,6 +98,9 @@ var (
 	}
 )
 
+// loadConfigFromFlags is called when the if0 command is called with --set flag
+// it is used to set config variables for that particular run
+// example: `if0 config --set var1=val1` sets var1 with value val1
 func loadConfigFromFlags(configParams []string) {
 	for _, param := range configParams {
 		set := strings.Split(param, "=")
@@ -110,7 +117,6 @@ func loadConfigFromFile(configFile string) {
 	}
 
 	// checking if the provided configuration file is present.
-	//filePath := filepath.Join(config.if0Dir, configFile)
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		log.Errorf("The provided configuration file %s is not found.", configFile)
 		return
@@ -126,9 +132,6 @@ func loadConfigFromFile(configFile string) {
 func init() {
 	rootCmd.AddCommand(configCmd)
 
-	// adding a 'zero' flag to the addConfig command.
-	// default value: false. By default, the configuration is updated to if0.env
-	// upon setting the zero flag, zero cluster configuration is updated
 	configCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
 	configCmd.Flags().BoolVarP(&zero, "zero", "z",
 		false, "updates zero cluster configuration")
