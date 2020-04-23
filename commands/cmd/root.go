@@ -53,7 +53,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.if0.env)")
+	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.if0.env)")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -69,9 +69,8 @@ func initConfig() {
 			os.Exit(1)
 		}
 
-		// Search config in home directory with type "if0.env".
-		viper.AddConfigPath(filepath.Join(home, ".if0"))
-		viper.SetConfigName("if0.env")
+		// Search config in home directory with file name "if0.env".
+		viper.SetConfigFile(filepath.Join(home, ".if0", "if0.env"))
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

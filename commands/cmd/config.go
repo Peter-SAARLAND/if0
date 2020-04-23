@@ -29,7 +29,7 @@ var (
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
 	zero bool
 
-	// add flag: used to add or update configuration files
+	// add flag: used to add new or update configuration files.
 	add string
 
 	// merge flag: used to merge the new configuration with current running configuration
@@ -76,6 +76,7 @@ var (
 				log.Debugln("Updating configuration")
 				loadConfigFromFile(add)
 			}
+
 			// printing current running configuration to the stdout.
 			log.Println("Current Running Configuration")
 			config.PrintCurrentRunningConfig()
