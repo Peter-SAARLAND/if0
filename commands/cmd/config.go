@@ -32,6 +32,11 @@ var (
 	// add flag: used to add new or update configuration files.
 	add string
 
+	//sync flag: used to sync with an external repository.
+	//used in conjunction with REMOTE_STORAGE (git repository link) and
+	//REPO_SYNC (bool value) variables
+	sync bool
+
 	// merge flag: used to merge the new configuration with current running configuration
 	// default: false
 	// set to true to merge and replace current configuration
@@ -83,6 +88,15 @@ var (
 
 			// automatic garbage collection
 			config.GarbageCollection()
+
+			//
+			if sync {
+				err := config.RepoSync()
+				if err != nil {
+					log.Errorln("Error while syncing with remote repo: ", err)
+					return
+				}
+			}
 		},
 	}
 )
@@ -129,4 +143,7 @@ func init() {
 	configCmd.Flags().StringVar(&add, "add", "", "configuration file to be added or updated")
 	configCmd.Flags().StringVar(&src, "src", "", "source configuration file for merge")
 	configCmd.Flags().StringVar(&dst, "dst", "", "destination configuration file to merge with")
+	configCmd.Flags().BoolVar(&sync, "sync",
+		false, "syncs configuration files with an external repository")
+
 }

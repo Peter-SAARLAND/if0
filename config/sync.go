@@ -181,16 +181,16 @@ func getHttpAuth() (transport.AuthMethod, error) {
 }
 
 func getSSHAuth() (*gitssh.PublicKeys, error) {
-	sshKeyPath := GetEnvVariable("SSH_KEY_PATH")
+	sshKeyPath := filepath.Join(rootPath, ".ssh", "id_rsa")
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
-		fmt.Println("ssh err: ", err)
+		fmt.Println("Error while reading SSH key: ", err)
 		return nil, err
 	}
 	passphrase := getPassphrase()
 	signer, err := ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
 	if err != nil {
-		fmt.Println("signer err: ", err)
+		fmt.Println("Error while parsing SSH key: ", err)
 		return nil, err
 	}
 	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
