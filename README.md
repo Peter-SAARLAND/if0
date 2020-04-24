@@ -41,7 +41,7 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
     
     * This command synchronizes configuration files with the git repository mentioned in the `if0.env` file under variable `REMOTE_STORAGE`.
     
-    * If the user uses an SSH link as the `REMOTE_STORAGE`, then an `id_rsa` SSH key is required to be present at `~/.ssh` for authentication.
+    * If the user uses an SSH link as the `REMOTE_STORAGE`, then a passphrase protected `id_rsa` SSH key is required to be present at `~/.ssh` for authentication.
     
     * If the user uses an HTTPS link, they will be prompted to enter `username` and `password` during sync operation.
     
