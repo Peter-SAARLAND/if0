@@ -1,6 +1,12 @@
-# ToDo
+[![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release) [![pipeline status](https://gitlab.com/peter.saarland/if0/badges/master/pipeline.svg)](https://gitlab.com/peter.saarland/if0/-/commits/master)
 
-- Implement https://github.com/semantic-release/semantic-release
+Maintained by [Peter.SAARLAND | DevOps Consultants](https://www.peter.saarland) - Helping companies to develop software with startup speed and enterprise quality.
+
+Additional Links:
+
+- [ns0](https://gitlab.com/peter.saarland/ns0/) - The container-native DNS Proxy
+- [zero](https://gitlab.com/peter.saarland/zero/) - The Application-Platform
+- [dash1](https://gitlab.com/peter.saarland/dash1/) - Virtual Infrastructure for Zero
 
 ### **Setting up:**
 
