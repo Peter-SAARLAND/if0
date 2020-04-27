@@ -6,20 +6,27 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/transport"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
+
+type gitOps interface {
+	init() (*git.Repository, error)
+	addRemote()
+	open()
+	pull()
+	addFiles()
+	commit()
+	push()
+}
+
+//type git struct {
+//
+//}
 
 // RepoSync is used to synchronize the if0 configuration files with a remote git repository
 func RepoSync() error {
@@ -40,7 +47,8 @@ func gitSync(remoteStorage string) error {
 	// get authorization
 	// if the git sync is via HTTPS, then fetch username-password credentials
 	// if the git sync is via SSH, then parse .ppk file
-	auth, err := getAuth(remoteStorage)
+	authObj := new(Auth)
+	auth, err := getAuth(*authObj, remoteStorage)
 	if err != nil {
 		log.Errorln("Authentication error: ", err)
 		return err
@@ -144,66 +152,6 @@ func gitSync(remoteStorage string) error {
 		return err
 	}
 	return nil
-}
-
-func getAuth(remoteStorage string) (transport.AuthMethod, error) {
-	var auth transport.AuthMethod
-	var err error
-	if strings.Contains(remoteStorage, "http") {
-		auth, err = getHttpAuth()
-		if err != nil {
-			log.Errorln("Error while fetching credentials: ", err)
-			return nil, err
-		}
-	} else if strings.Contains(remoteStorage, "git@") {
-		auth, err = getSSHAuth()
-		if err != nil {
-			log.Errorln("Error while fetching credentials: ", err)
-			return nil, err
-		}
-	}
-	return auth, nil
-}
-
-func getHttpAuth() (transport.AuthMethod, error) {
-	fmt.Println("Enter Username: ")
-	userName, err := terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		fmt.Printf("Failed to read username: %v", err)
-	}
-	fmt.Println("Enter Password: ")
-	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		fmt.Printf("Failed to read password: %v", err)
-	}
-	auth := &http.BasicAuth{Username: string(userName), Password: string(bytePassword)}
-	return auth, err
-}
-
-func getSSHAuth() (*gitssh.PublicKeys, error) {
-	sshKeyPath := filepath.Join(rootPath, ".ssh", "id_rsa")
-	sshKey, err := ioutil.ReadFile(sshKeyPath)
-	if err != nil {
-		fmt.Println("Error while reading SSH key: ", err)
-		return nil, err
-	}
-	passphrase := getPassphrase()
-	signer, err := ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
-	if err != nil {
-		fmt.Println("Error while parsing SSH key: ", err)
-		return nil, err
-	}
-	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
-	return auth, nil
-}
-
-func getPassphrase() []byte {
-	fmt.Println("Enter Passphrase. If you do not have a passphrase, press enter.")
-	passphrase, err := terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		fmt.Printf("Failed to read username: %v", err)
-	}
-	return []byte(passphrase)
 }
 
 func gitInit(localRepoPath string, r *git.Repository) (*git.Repository, error) {
