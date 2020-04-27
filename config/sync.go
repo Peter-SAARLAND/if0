@@ -11,6 +11,10 @@ import (
 	"strings"
 )
 
+var (
+	repoSync = gitSync
+)
+
 // RepoSync is used to synchronize the if0 configuration files with a remote git repository
 func RepoSync() error {
 	remoteStorage := GetEnvVariable("REMOTE_STORAGE")
@@ -19,7 +23,7 @@ func RepoSync() error {
 		return errors.New("REMOTE_STORAGE is not set.")
 	}
 	syncObj := sync{}
-	err := gitSync(&syncObj, remoteStorage)
+	err := repoSync(&syncObj, remoteStorage)
 	if err != nil {
 		log.Errorln("Error while syncing external repo: ", err)
 		return err
@@ -41,7 +45,6 @@ func gitSync(syncObj syncOps, remoteStorage string) error {
 	// check if the repo is already present
 	// if not, do a `git init`, and `git remote add origin remoteStorage`
 	r := &git.Repository{}
-	fmt.Println("syncObj: ", syncObj)
 	if _, err := os.Stat(filepath.Join(if0Dir, git.GitDirName)); os.IsNotExist(err) {
 		// git init
 		r, err = syncObj.gitInit(if0Dir)
