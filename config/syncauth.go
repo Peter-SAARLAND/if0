@@ -14,12 +14,16 @@ import (
 	"syscall"
 )
 
+var (
+	getSyncAuth = getAuth
+)
+
 type Auth interface {
 	readPassword() ([]byte, error)
 	parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error)
 }
 
-type parseAuth struct {
+type auth struct {
 
 }
 
@@ -66,7 +70,7 @@ func getSSHAuth(authObj Auth) (*gitssh.PublicKeys, error) {
 		fmt.Println("Error while reading SSH key: ", err)
 		return nil, err
 	}
-	fmt.Println("Enter Passphrase. If you do not have authObj passphrase, press enter.")
+	fmt.Println("Enter Passphrase. If you do not have a passphrase, press enter.")
 	passphrase, err := authObj.readPassword()
 	if err != nil {
 		log.Println("Error while reading passphrase: ", err)
@@ -81,11 +85,11 @@ func getSSHAuth(authObj Auth) (*gitssh.PublicKeys, error) {
 	return auth, nil
 }
 
-func (p *parseAuth) parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error) {
+func (p *auth) parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error) {
 	return ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
 }
 
-func (p *parseAuth) readPassword() ([]byte, error) {
+func (p *auth) readPassword() ([]byte, error) {
 	secret, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return nil, err
