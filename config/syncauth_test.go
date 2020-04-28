@@ -50,14 +50,26 @@ func TestGetAuthPasswordError(t *testing.T) {
 	assert.EqualError(t, err, "test-error")
 }
 
+//func TestGetSSHAuthNoFile(t *testing.T) {
+//	rootPath = filepath.Join("config")
+//	authObj := auth{}
+//	auth, err := getAuth(&authObj, "git@gitlab:sample-storage")
+//	assert.Nil(t, auth)
+//	assert.NotNil(t, err)
+//}
+//
 //func TestGetAuthSSH(t *testing.T) {
+//	rootPath = filepath.Join("config")
 //	testObj := new(mockAuth)
-//	testObj.On("readPassword").Return("test-passphrase", nil)
-//	testObj.On("parseSSHKey").Return(nil, nil)
+//	_ = os.RemoveAll(".ssh")
+//	generateTestPrivKey()
+//	fmt.Println(filepath.Join(rootPath, ".ssh", "id_rsa"))
+//	testObj.On("readPassword").Return("pwd", nil)
 //	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
 //	expectedAuth := &gitssh.PublicKeys{User: "git", Signer: nil}
 //	assert.Equal(t, auth, expectedAuth)
 //	assert.Nil(t, err)
+//	_ = os.RemoveAll(".ssh")
 //}
 //
 //func TestGetAuthSSHPassphraseError(t *testing.T) {
@@ -75,4 +87,21 @@ func TestGetAuthPasswordError(t *testing.T) {
 //	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
 //	assert.Nil(t, auth)
 //	assert.EqualError(t, err, "test-parse-error")
+//}
+//
+//func generateTestPrivKey() {
+//	rootPath = filepath.Join("config")
+//	_ = os.Mkdir(".ssh", 0777)
+//	f, err := os.OpenFile(filepath.Join(".ssh", "id_rsa"), os.O_CREATE|os.O_RDWR, 0777)
+//	fmt.Println(err)
+//	key, _ := rsa.GenerateKey(rand.Reader, 2048)
+//	// Convert it to pem
+//	block := &pem.Block{
+//		Type:  "RSA PRIVATE KEY",
+//		Bytes: x509.MarshalPKCS1PrivateKey(key),
+//	}
+//	// Encrypt the pem
+//	block, _ = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, []byte("pwd"), x509.PEMCipherAES256)
+//	pembytes := pem.EncodeToMemory(block)
+//	_ = ioutil.WriteFile(f.Name(), pembytes, 0666)
 //}

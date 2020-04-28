@@ -117,6 +117,7 @@ func readStdOutPrintCurrentRunningConfig() []byte {
 	_ = w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = rescueStdout
+	_ = r.Close()
 	return out
 }
 
@@ -180,6 +181,7 @@ func TestNoValidConfig(t *testing.T) {
 	assert.Equal(t, "no valid versions (IF0_VERSION or ZERO_VERSION) found in the config file", err.Error())
 	assert.Equal(t, isValid, false)
 	_ = os.Remove(testConfig)
+
 }
 
 func TestMergeConfigFilesNoSrc(t *testing.T) {
