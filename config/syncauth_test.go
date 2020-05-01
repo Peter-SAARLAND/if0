@@ -13,12 +13,16 @@ type mockAuth struct {
 	mock.Mock
 }
 
+func (mAuth *mockAuth) parseSSHKey(sshKey []byte) (ssh.Signer, error) {
+	panic("implement me")
+}
+
 func (mAuth *mockAuth) readPassword() ([]byte, error) {
 	args := mAuth.Called()
 	return []byte(args.String(0)), args.Error(1)
 }
 
-func (mAuth *mockAuth) parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error) {
+func (mAuth *mockAuth) parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error) {
 	args := mAuth.Called()
 	return nil, args.Error(1)
 }
@@ -83,7 +87,7 @@ func TestGetAuthPasswordError(t *testing.T) {
 //func TestGetAuthSSHParseError(t *testing.T) {
 //	testObj := new(mockAuth)
 //	testObj.On("readPassword").Return("test-passphrase", nil)
-//	testObj.On("parseSSHKey").Return(nil, errors.New("test-parse-error"))
+//	testObj.On("parseSSHKeyWithPassphrase").Return(nil, errors.New("test-parse-error"))
 //	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
 //	assert.Nil(t, auth)
 //	assert.EqualError(t, err, "test-parse-error")

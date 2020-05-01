@@ -20,11 +20,11 @@ var (
 
 type Auth interface {
 	readPassword() ([]byte, error)
-	parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error)
+	parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error)
+	parseSSHKey(sshKey []byte) (ssh.Signer, error)
 }
 
 type auth struct {
-
 }
 
 func getAuth(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
@@ -70,23 +70,35 @@ func getSSHAuth(authObj Auth) (*gitssh.PublicKeys, error) {
 		fmt.Println("Error while reading SSH key: ", err)
 		return nil, err
 	}
-	fmt.Println("Enter Passphrase. If you do not have a passphrase, press enter.")
-	passphrase, err := authObj.readPassword()
+	signer, err := authObj.parseSSHKey(sshKey)
 	if err != nil {
-		log.Println("Error while reading passphrase: ", err)
-		return nil, err
-	}
-	signer, err := authObj.parseSSHKey(sshKey, passphrase)
-	if err != nil {
-		fmt.Println("Error while parsing SSH key: ", err)
-		return nil, err
+		if err.Error() == "ssh: this private key is passphrase protected" {
+			fmt.Println("Passphrase required. Enter Passphrase")
+			passphrase, err := authObj.readPassword()
+			if err != nil {
+				log.Println("Error while reading passphrase: ", err)
+				return nil, err
+			}
+			signer, err = authObj.parseSSHKeyWithPassphrase(sshKey, passphrase)
+			if err != nil {
+				fmt.Println("Error while parsing SSH key: ", err)
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
 	return auth, nil
 }
 
-func (p *auth) parseSSHKey(sshKey, passphrase []byte) (ssh.Signer, error) {
+func (p *auth) parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error) {
 	return ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
+
+}
+
+func (p *auth) parseSSHKey(sshKey []byte) (ssh.Signer, error) {
+	return ssh.ParsePrivateKey(sshKey)
 }
 
 func (p *auth) readPassword() ([]byte, error) {
@@ -96,4 +108,3 @@ func (p *auth) readPassword() ([]byte, error) {
 	}
 	return secret, nil
 }
-

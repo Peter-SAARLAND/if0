@@ -7,7 +7,9 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -67,57 +69,128 @@ func gitSync(syncObj syncOps, remoteStorage string) error {
 	}
 
 	// git pull
-	pullOptions := &git.PullOptions{Auth: auth, RemoteName: "origin"}
-	worktree, err := syncObj.pull(remoteStorage, r, pullOptions)
+	//err = gitPull(if0Dir)
+	//if err != nil {
+	//	log.Errorln("Git pull error -", err)
+	//	return err
+	//}
+
+	auto, manual, err := checkForLocalChanges(syncObj, r)
+	if err != nil {
+		return err
+	}
+
+	if manual {
+		fmt.Println("Exiting.")
+		return errors.New("add/commit the local changes before sync")
+	}
+
+	pullOptions := &git.PullOptions{Auth: auth, RemoteName: "origin", Force: false}
+	_, err = syncObj.pull(remoteStorage, r, pullOptions)
 	if err != nil {
 		log.Errorln("Pull status: ", err)
 	}
 
-	fmt.Println("worktree ", worktree)
-	// git status
-	status, err := syncObj.status(worktree)
-	if err != nil {
-		fmt.Println("status err: ", err)
-	}
-	if len(status) == 0 {
-		log.Println("No local changes were found. Exiting")
-		return nil
-	}
-
-	// prompt the user if they want to add/commit/push changes
-	fmt.Println("Following changes were found. Would you like to commit them?")
-	fmt.Println(status)
-	fmt.Println("Enter y or n")
-	reader := bufio.NewReader(os.Stdin)
-	text, _ := reader.ReadString('\n')
-
-	// exit if the user does not want to add/commit/push changes
-	if strings.EqualFold(strings.TrimSpace(text), "n") {
-		log.Println("Exiting")
-		return nil
-	}
-
-	// git add
-	log.Println("Adding local changes")
-	for file, _ := range status {
-		err := syncObj.addFile(worktree, file)
+	if auto {
+		fmt.Println("Pushing the local changes")
+		w, err := r.Worktree()
 		if err != nil {
-			log.Errorf("Error adding file %s: %s \n", file, err)
+			log.Errorln("Worktree error: ", err)
+		}
+		// git commit
+		err = syncObj.commit(w)
+		if err != nil {
+			log.Errorln("Error while committing changes: ", err)
+		}
+		// git push
+		err = syncObj.push(auth, r)
+		if err != nil {
+			log.Errorln("Error while pushing changes: ", err)
+			return err
 		}
 	}
 
-	// git commit
-	err = syncObj.commit(worktree)
+	return nil
+}
+
+func checkForLocalChanges(syncObj syncOps, r *git.Repository) (bool, bool, error) {
+	var auto, manual bool
+	// worktree
+	w, err := r.Worktree()
 	if err != nil {
-		log.Errorln("Error while committing changes: ", err)
-		return err
+		log.Errorln("Worktree error: ", err)
+		return false, false, err
 	}
 
-	// git push
-	err = syncObj.push(auth, r)
+	status, err := checkStatus(syncObj, w)
 	if err != nil {
-		log.Errorln("Error while pushing changes: ", err)
-		return err
+		return false, false, err
+	}
+
+	if len(status) > 0 {
+		// prompt the user if they want to add/commit/push changes
+		fmt.Println("Following changes were found. " +
+			"Pulling in changes from the remote repository would " +
+			"delete the unstaged changes before git init. \n" +
+			"Other changes would be overwritten by the remote changes.")
+		fmt.Println(status)
+		fmt.Println("Enter 'y' to add all the changes. \n" +
+			"Enter 'n' to ignore all the changes. \n" +
+			"Enter 'm' to exit `sync` and add the changes manually. ")
+		reader := bufio.NewReader(os.Stdin)
+		text, _ := reader.ReadString('\n')
+		// if the user chooses 'y', add/commit/push changes
+		switch strings.TrimSpace(text) {
+		case "y":
+			auto = true
+			manual = false
+			log.Println("Adding local changes")
+			for file, _ := range status {
+				err := syncObj.addFile(w, file)
+				if err != nil {
+					log.Errorf("Error adding file %s: %s \n", file, err)
+					return false, false, err
+				}
+			}
+		case "m":
+			auto = false
+			manual = true
+		case "n":
+			auto = false
+			manual = false
+		}
+	}
+	return auto, manual, nil
+}
+
+func checkStatus(syncObj syncOps, w *git.Worktree) (git.Status, error) {
+	// git status
+	status, err := syncObj.status(w)
+	if err != nil {
+		fmt.Println("status err: ", err)
+		return nil, err
+	}
+	return status, nil
+}
+
+// WORKAROUND for git pull as git.Pull deletes unstaged changes.
+func gitPull(if0Dir string) error {
+	err := os.Chdir(if0Dir)
+	if err != nil {
+		fmt.Println("err chdir - ", err)
+	}
+	log.Println("Pulling changes")
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/C", "git", "pull", "origin", "master")
+	} else {
+		cmd = exec.Command("git", "pull", "origin", "master")
+	}
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		log.Errorln("Error while doing git pull - ", string(out))
+		return errors.New(string(out))
 	}
 	return nil
 }
