@@ -7,6 +7,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"if0/common"
 	"os"
 	"path/filepath"
 	"testing"
@@ -16,49 +17,49 @@ type mockSync struct {
 	mock.Mock
 }
 
-func (m *mockSync) gitInit(localRepoPath string) (*git.Repository, error) {
+func (m *mockSync) GitInit(localRepoPath string) (*git.Repository, error) {
 	args := m.Called()
 	return args.Get(0).(*git.Repository), args.Error(1)
 }
 
-func (m *mockSync) addRemote(remoteStorage string, r *git.Repository) error {
+func (m *mockSync) AddRemote(remoteStorage string, r *git.Repository) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *mockSync) open(if0Dir string) (*git.Repository, error) {
+func (m *mockSync) Open(if0Dir string) (*git.Repository, error) {
 	args := m.Called()
 	return nil, args.Error(1)
 }
 
-func (m *mockSync) pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error) {
+func (m *mockSync) Pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error) {
 	args := m.Called()
 	return args.Get(0).(*git.Worktree), args.Error(1)
 }
 
-func (m *mockSync) status(w *git.Worktree) (git.Status, error) {
+func (m *mockSync) Status(w *git.Worktree) (git.Status, error) {
 	args := m.Called()
 	return args.Get(0).(git.Status), args.Error(1)
 }
 
-func (m *mockSync) addFile(w *git.Worktree, file string) error {
+func (m *mockSync) AddFile(w *git.Worktree, file string) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *mockSync) commit(w *git.Worktree) error {
+func (m *mockSync) Commit(w *git.Worktree) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *mockSync) push(auth transport.AuthMethod, r *git.Repository) error {
+func (m *mockSync) Push(auth transport.AuthMethod, r *git.Repository) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
 func TestGitSyncAuthError(t *testing.T) {
 	testSyncObj := new(mockSync)
-	getSyncAuth = func(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+	common.GetSyncAuth = func(authObj common.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, errors.New("test-auth-error")
 	}
 	err := gitSync(testSyncObj, "http://sample-storage")
@@ -67,37 +68,37 @@ func TestGitSyncAuthError(t *testing.T) {
 
 func TestGitSyncInitError(t *testing.T) {
 	testSyncObj := new(mockSync)
-	if0Dir = "config"
-	getSyncAuth = func(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+	common.If0Dir = "config"
+	common.GetSyncAuth = func(authObj common.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, nil
 	}
-	testSyncObj.On("gitInit").Return(&git.Repository{}, errors.New("test-init-error"))
+	testSyncObj.On("GitInit").Return(&git.Repository{}, errors.New("test-init-error"))
 	err := gitSync(testSyncObj, "http://sample-storage")
 	assert.EqualError(t, err, "test-init-error")
 }
 
 func TestGitInit(t *testing.T) {
-	getSyncAuth = func(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+	common.GetSyncAuth = func(authObj common.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		auth := &http.BasicAuth{Username: "test-user", Password: "test-password"}
 		return auth, nil
 	}
-	if0Dir = "config"
-	var testSyncObj sync
+	common.If0Dir = "config"
+	var testSyncObj common.Sync
 	err := gitSync(&testSyncObj, "http://sample-storage")
 	gitDir := filepath.Join("config", ".git")
 	assert.DirExists(t, gitDir)
 	assert.Nil(t, err)
-	_ = os.RemoveAll(if0Dir)
+	_ = os.RemoveAll(common.If0Dir)
 }
 
 func TestGitSyncRemoteError(t *testing.T) {
 	testSyncObj := new(mockSync)
-	if0Dir = "config"
-	getSyncAuth = func(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+	common.If0Dir = "config"
+	common.GetSyncAuth = func(authObj common.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, nil
 	}
-	testSyncObj.On("gitInit").Return(&git.Repository{}, nil)
-	testSyncObj.On("addRemote").Return(errors.New("test-remote-error"))
+	testSyncObj.On("GitInit").Return(&git.Repository{}, nil)
+	testSyncObj.On("AddRemote").Return(errors.New("test-remote-error"))
 	err := gitSync(testSyncObj, "http://sample-storage")
 	assert.EqualError(t, err, "test-remote-error")
 }
@@ -110,7 +111,7 @@ func TestRepoSyncNoRemoteStorage(t *testing.T) {
 
 func TestRepoSyncError(t *testing.T) {
 	SetEnvVariable("REMOTE_STORAGE", "http://sample-storage")
-	repoSync = func(syncObj syncOps, remoteStorage string) error {
+	repoSync = func(syncObj common.SyncOps, remoteStorage string) error {
 		return errors.New("test-repo-sync-error")
 	}
 	err := RepoSync()
@@ -118,13 +119,13 @@ func TestRepoSyncError(t *testing.T) {
 }
 
 //func TestGitSync(t *testing.T) {
-//	getSyncAuth = func(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+//	getSyncAuth = func(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 //		auth := &http.BasicAuth{Username: "test-user", Password: "test-password"}
 //		return auth, nil
 //	}
 //	testSyncObj := new(mockSync)
 //	if0Dir = "config"
-//	testSyncObj.On("gitInit").Return(&git.Repository{}, nil)
+//	testSyncObj.On("GitInit").Return(&git.Repository{}, nil)
 //	testSyncObj.On("addRemote").Return(nil)
 //	testSyncObj.On("open").Return(&git.Repository{}, nil)
 //	testSyncObj.On("pull").Return(&git.Worktree{}, nil)

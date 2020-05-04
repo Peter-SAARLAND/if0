@@ -1,4 +1,4 @@
-package config
+package common
 
 import (
 	"errors"
@@ -55,23 +55,23 @@ func TestGetAuthPasswordError(t *testing.T) {
 }
 
 //func TestGetSSHAuthNoFile(t *testing.T) {
-//	rootPath = filepath.Join("config")
-//	authObj := auth{}
-//	auth, err := getAuth(&authObj, "git@gitlab:sample-storage")
-//	assert.Nil(t, auth)
+//	RootPath = filepath.Join("config")
+//	authObj := Auth{}
+//	Auth, err := getAuth(&authObj, "git@gitlab:sample-storage")
+//	assert.Nil(t, Auth)
 //	assert.NotNil(t, err)
 //}
 //
 //func TestGetAuthSSH(t *testing.T) {
-//	rootPath = filepath.Join("config")
+//	RootPath = filepath.Join("config")
 //	testObj := new(mockAuth)
 //	_ = os.RemoveAll(".ssh")
 //	generateTestPrivKey()
-//	fmt.Println(filepath.Join(rootPath, ".ssh", "id_rsa"))
+//	fmt.Println(filepath.Join(RootPath, ".ssh", "id_rsa"))
 //	testObj.On("readPassword").Return("pwd", nil)
-//	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
+//	Auth, err := getAuth(testObj, "git@gitlab:sample-storage")
 //	expectedAuth := &gitssh.PublicKeys{User: "git", Signer: nil}
-//	assert.Equal(t, auth, expectedAuth)
+//	assert.Equal(t, Auth, expectedAuth)
 //	assert.Nil(t, err)
 //	_ = os.RemoveAll(".ssh")
 //}
@@ -79,8 +79,8 @@ func TestGetAuthPasswordError(t *testing.T) {
 //func TestGetAuthSSHPassphraseError(t *testing.T) {
 //	testObj := new(mockAuth)
 //	testObj.On("readPassword").Return("", errors.New("test-error"))
-//	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
-//	assert.Nil(t, auth)
+//	Auth, err := getAuth(testObj, "git@gitlab:sample-storage")
+//	assert.Nil(t, Auth)
 //	assert.EqualError(t, err, "test-error")
 //}
 //
@@ -88,13 +88,13 @@ func TestGetAuthPasswordError(t *testing.T) {
 //	testObj := new(mockAuth)
 //	testObj.On("readPassword").Return("test-passphrase", nil)
 //	testObj.On("parseSSHKeyWithPassphrase").Return(nil, errors.New("test-parse-error"))
-//	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
-//	assert.Nil(t, auth)
+//	Auth, err := getAuth(testObj, "git@gitlab:sample-storage")
+//	assert.Nil(t, Auth)
 //	assert.EqualError(t, err, "test-parse-error")
 //}
 //
 //func generateTestPrivKey() {
-//	rootPath = filepath.Join("config")
+//	RootPath = filepath.Join("config")
 //	_ = os.Mkdir(".ssh", 0777)
 //	f, err := os.OpenFile(filepath.Join(".ssh", "id_rsa"), os.O_CREATE|os.O_RDWR, 0777)
 //	fmt.Println(err)

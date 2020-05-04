@@ -6,23 +6,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 	"github.com/spf13/viper"
+	"if0/common"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
-const (
-	IFO_VERSION  = "IF0_VERSION"
-	ZERO_VERSION = "ZERO_VERSION"
-)
 
-var (
-	rootPath, _  = os.UserHomeDir()
-	if0Dir       = filepath.Join(rootPath, ".if0")
-	envDir       = filepath.Join(if0Dir, ".environments")
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
-	if0Default   = filepath.Join(if0Dir, "if0.env")
-)
 
 // SetEnvVariable sets a config variable
 func SetEnvVariable(key, value string) {
@@ -42,18 +31,18 @@ func GetEnvVariable(key string) string {
 
 // PrintCurrentRunningConfig reads the current running if0/env configuration file and prints it
 func PrintCurrentRunningConfig() {
-	present := isFilePresent(if0Default)
+	present := isFilePresent(common.If0Default)
 	if !present {
 		log.Println("Current running configuration missing. Creating a default if0.env file at ~/.if0")
-		if _, err := os.Stat(if0Dir); os.IsNotExist(err) {
+		if _, err := os.Stat(common.If0Dir); os.IsNotExist(err) {
 			log.Println("Directory does not exist, creating dir .if0")
-			err = os.Mkdir(if0Dir, os.ModeDir)
+			err = os.Mkdir(common.If0Dir, os.ModeDir)
 			if err != nil {
 				log.Errorln("Error while creating .if0 dir: ", err)
 				return
 			}
 		}
-		f, err := os.OpenFile(if0Default, os.O_CREATE|os.O_RDWR, 0644)
+		f, err := os.OpenFile(common.If0Default, os.O_CREATE|os.O_RDWR, 0644)
 		if err != nil {
 			log.Errorln("Error while creating a new config file: ", err)
 			return
@@ -64,7 +53,7 @@ func PrintCurrentRunningConfig() {
 			return
 		}
 	}
-	readConfigFile(if0Default)
+	readConfigFile(common.If0Default)
 	allConfig := viper.AllSettings()
 	for key, val := range allConfig {
 		fmt.Println(key, ":", val)
@@ -133,8 +122,8 @@ func IsConfigFileValid(configFile string, zero bool) (bool, error) {
 	if err != nil {
 		log.Errorln("Error while reading config file: ", err)
 	}
-	if0Version := viper.IsSet(IFO_VERSION)
-	zeroVersion := viper.IsSet(ZERO_VERSION)
+	if0Version := viper.IsSet(common.IFO_VERSION)
+	zeroVersion := viper.IsSet(common.ZERO_VERSION)
 
 	if !if0Version && !zeroVersion {
 		return false, errors.New("no valid versions (IF0_VERSION or ZERO_VERSION) found in the config file")

@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	"if0/common"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -20,12 +21,12 @@ func getDstFileForMerge(src string, dst string, zero bool) string {
 	// setting dst path for zero configuration files
 	if zero {
 		if dst == "" {
-			dst = filepath.Join(envDir, filepath.Base(src))
+			dst = filepath.Join(common.EnvDir, filepath.Base(src))
 		} else {
-			dst = filepath.Join(envDir, filepath.Base(dst))
+			dst = filepath.Join(common.EnvDir, filepath.Base(dst))
 		}
 	} else {
-		dst = if0Default
+		dst = common.If0Default
 	}
 	return dst
 }
@@ -65,17 +66,17 @@ func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	var runningConfigFile string
 	if zero {
 		// creating a .environments directory to store zero-cluster configurations, if it does not exist.
-		if _, err := os.Stat(envDir); os.IsNotExist(err) {
+		if _, err := os.Stat(common.EnvDir); os.IsNotExist(err) {
 			log.Debugln("Directory does not exist, creating dir for snapshots")
-			_ = os.Mkdir(envDir, os.ModeDir)
+			_ = os.Mkdir(common.EnvDir, os.ModeDir)
 		}
 		// setting configuration file path to update zero-cluster configuration
 		log.Println("Updating zero cluster configuration with ", srcConfigFile)
-		runningConfigFile = filepath.Join(envDir, filepath.Base(srcConfigFile))
+		runningConfigFile = filepath.Join(common.EnvDir, filepath.Base(srcConfigFile))
 	} else {
 		// setting configuration file path to update if0.env configuration
 		log.Println("Updating if0.env configuration with ", srcConfigFile)
-		runningConfigFile = if0Default
+		runningConfigFile = common.If0Default
 	}
 	return runningConfigFile
 }
@@ -115,12 +116,12 @@ func isFilePresent(fileName string) bool {
 // and stores it in the ~if0/.snapshots directory
 // example: if0-02042020_170240.env
 func backupToSnapshots(fileName string) error {
-	if _, err := os.Stat(snapshotsDir); os.IsNotExist(err) {
+	if _, err := os.Stat(common.SnapshotsDir); os.IsNotExist(err) {
 		log.Debugln("Directory does not exist, creating dir for snapshots")
-		_ = os.Mkdir(snapshotsDir, os.ModeDir)
+		_ = os.Mkdir(common.SnapshotsDir, os.ModeDir)
 	}
 	timestamp := string(time.Now().Format("02012006_150405"))
-	bkpFile := filepath.Join(snapshotsDir, strings.Split(filepath.Base(fileName), ".")[0]+"-"+timestamp+".env")
+	bkpFile := filepath.Join(common.SnapshotsDir, strings.Split(filepath.Base(fileName), ".")[0]+"-"+timestamp+".env")
 	readConfigFile(fileName)
 	err := viper.WriteConfigAs(bkpFile)
 	if err != nil {

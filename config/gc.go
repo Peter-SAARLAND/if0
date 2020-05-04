@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/djherbis/times"
 	log "github.com/sirupsen/logrus"
+	"if0/common"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -17,7 +18,7 @@ import (
 func GarbageCollection() {
 	gc, gcPeriod := getGcPeriod()
 	if gc {
-		files, err := ioutil.ReadDir(snapshotsDir)
+		files, err := ioutil.ReadDir(common.SnapshotsDir)
 		if err != nil {
 			log.Errorln("error while reading snaphots: ", err)
 			return
@@ -26,7 +27,7 @@ func GarbageCollection() {
 			creationTime := getCreationTome(f)
 			diff := time.Now().Sub(creationTime).Hours() / 24
 			if int(diff) >= gcPeriod {
-				_ = os.Remove(filepath.Join(snapshotsDir, f.Name()))
+				_ = os.Remove(filepath.Join(common.SnapshotsDir, f.Name()))
 			}
 		}
 	}
@@ -34,7 +35,7 @@ func GarbageCollection() {
 
 func getCreationTome(f os.FileInfo) time.Time {
 	var creationTime time.Time
-	t, err := times.Stat(filepath.Join(snapshotsDir, f.Name()))
+	t, err := times.Stat(filepath.Join(common.SnapshotsDir, f.Name()))
 	if err != nil {
 		log.Errorln(err)
 	}
@@ -47,7 +48,7 @@ func getCreationTome(f os.FileInfo) time.Time {
 }
 
 func getGcPeriod() (bool, int) {
-	readConfigFile(if0Default)
+	readConfigFile(common.If0Default)
 	gcAutoStr := GetEnvVariable("GC_AUTO")
 	gcPeriodStr := GetEnvVariable("GC_PERIOD")
 

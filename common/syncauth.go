@@ -1,4 +1,4 @@
-package config
+package common
 
 import (
 	"fmt"
@@ -15,19 +15,19 @@ import (
 )
 
 var (
-	getSyncAuth = getAuth
+	GetSyncAuth = getAuth
 )
 
-type Auth interface {
+type AuthOps interface {
 	readPassword() ([]byte, error)
 	parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error)
 	parseSSHKey(sshKey []byte) (ssh.Signer, error)
 }
 
-type auth struct {
+type Auth struct {
 }
 
-func getAuth(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
+func getAuth(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 	var auth transport.AuthMethod
 	var err error
 	if strings.Contains(remoteStorage, "http") {
@@ -46,7 +46,7 @@ func getAuth(authObj Auth, remoteStorage string) (transport.AuthMethod, error) {
 	return auth, nil
 }
 
-func getHttpAuth(authObj Auth) (transport.AuthMethod, error) {
+func getHttpAuth(authObj AuthOps) (transport.AuthMethod, error) {
 	fmt.Println("Enter Username: ")
 	userName, err := authObj.readPassword()
 	if err != nil {
@@ -63,8 +63,8 @@ func getHttpAuth(authObj Auth) (transport.AuthMethod, error) {
 	return auth, nil
 }
 
-func getSSHAuth(authObj Auth) (*gitssh.PublicKeys, error) {
-	sshKeyPath := filepath.Join(rootPath, ".ssh", "id_rsa")
+func getSSHAuth(authObj AuthOps) (*gitssh.PublicKeys, error) {
+	sshKeyPath := filepath.Join(RootPath, ".ssh", "id_rsa")
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
 		fmt.Println("Error while reading SSH key: ", err)
@@ -92,16 +92,16 @@ func getSSHAuth(authObj Auth) (*gitssh.PublicKeys, error) {
 	return auth, nil
 }
 
-func (p *auth) parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error) {
+func (p *Auth) parseSSHKeyWithPassphrase(sshKey, passphrase []byte) (ssh.Signer, error) {
 	return ssh.ParsePrivateKeyWithPassphrase(sshKey, passphrase)
 
 }
 
-func (p *auth) parseSSHKey(sshKey []byte) (ssh.Signer, error) {
+func (p *Auth) parseSSHKey(sshKey []byte) (ssh.Signer, error) {
 	return ssh.ParsePrivateKey(sshKey)
 }
 
-func (p *auth) readPassword() ([]byte, error) {
+func (p *Auth) readPassword() ([]byte, error) {
 	secret, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return nil, err

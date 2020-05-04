@@ -1,4 +1,4 @@
-package config
+package common
 
 import (
 	"github.com/go-git/go-git/v5"
@@ -10,21 +10,21 @@ import (
 	"time"
 )
 
-type syncOps interface {
-	gitInit(localRepoPath string) (*git.Repository, error)
-	addRemote(remoteStorage string, r *git.Repository) error
-	open(if0Dir string) (*git.Repository, error)
-	pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error)
-	status(w *git.Worktree) (git.Status, error)
-	addFile(w *git.Worktree, file string) error
-	commit(w *git.Worktree) error
-	push(auth transport.AuthMethod, r *git.Repository) error
+type SyncOps interface {
+	GitInit(localRepoPath string) (*git.Repository, error)
+	AddRemote(remoteStorage string, r *git.Repository) error
+	Open(if0Dir string) (*git.Repository, error)
+	Pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error)
+	Status(w *git.Worktree) (git.Status, error)
+	AddFile(w *git.Worktree, file string) error
+	Commit(w *git.Worktree) error
+	Push(auth transport.AuthMethod, r *git.Repository) error
 }
 
-type sync struct {
+type Sync struct {
 }
 
-func (s *sync) gitInit(localRepoPath string) (*git.Repository, error) {
+func (s *Sync) GitInit(localRepoPath string) (*git.Repository, error) {
 	log.Println("Creating a git repository at ", localRepoPath)
 	r, err := git.PlainInit(localRepoPath, false)
 	if err != nil {
@@ -34,7 +34,7 @@ func (s *sync) gitInit(localRepoPath string) (*git.Repository, error) {
 	return r, nil
 }
 
-func (s *sync) addRemote(remoteStorage string, r *git.Repository) error {
+func (s *Sync) AddRemote(remoteStorage string, r *git.Repository) error {
 	log.Println("Adding remote 'origin' for the repository at ", remoteStorage)
 	remoteConfig := &config.RemoteConfig{Name: "origin", URLs: []string{remoteStorage}}
 	_, err := r.CreateRemote(remoteConfig)
@@ -45,12 +45,12 @@ func (s *sync) addRemote(remoteStorage string, r *git.Repository) error {
 	return nil
 }
 
-func (s *sync) open(if0Dir string) (*git.Repository, error) {
+func (s *Sync) Open(if0Dir string) (*git.Repository, error) {
 	log.Println("Git repository already present.")
 	return git.PlainOpen(if0Dir)
 }
 
-func (s *sync) pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error) {
+func (s *Sync) Pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error) {
 	log.Println("Pulling in changes from ", remoteStorage)
 	w, err := r.Worktree()
 	if err != nil {
@@ -59,22 +59,22 @@ func (s *sync) pull(remoteStorage string, r *git.Repository, pullOptions *git.Pu
 	}
 	err = w.Pull(pullOptions)
 	if err != nil {
-		log.Errorln("Pull status: ", err)
+		log.Errorln("Pull Status: ", err)
 		return w, err
 	}
 	return w, nil
 }
 
-func (s *sync) status(w *git.Worktree) (git.Status, error) {
+func (s *Sync) Status(w *git.Worktree) (git.Status, error) {
 	return w.Status()
 }
 
-func (s *sync) addFile(w *git.Worktree, file string) error {
+func (s *Sync) AddFile(w *git.Worktree, file string) error {
 	_, err := w.Add(file)
 	return err
 }
 
-func (s *sync) commit(w *git.Worktree) error {
+func (s *Sync) Commit(w *git.Worktree) error {
 	commitMsg := "feat: updating config files - " + time.Now().Format("02012006_150405")
 	commitOptions := &git.CommitOptions{
 		All: false,
@@ -86,7 +86,7 @@ func (s *sync) commit(w *git.Worktree) error {
 	return err
 }
 
-func (s *sync) push(auth transport.AuthMethod, r *git.Repository) error {
+func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 	log.Println("Pushing local changes")
 	pushOptions := &git.PushOptions{
 		RemoteName: "origin",
