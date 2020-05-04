@@ -7,6 +7,9 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	log "github.com/sirupsen/logrus"
 	"os"
+	"path"
+	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -19,6 +22,7 @@ type SyncOps interface {
 	AddFile(w *git.Worktree, file string) error
 	Commit(w *git.Worktree) error
 	Push(auth transport.AuthMethod, r *git.Repository) error
+	Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error)
 }
 
 type Sync struct {
@@ -96,3 +100,18 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 	return r.Push(pushOptions)
 }
 
+func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
+	log.Printf("Cloning the git repository %s at %s", repoUrl, EnvDir)
+	cloneOptions := &git.CloneOptions{
+		URL:      repoUrl,
+		Auth:     auth,
+		Progress: os.Stdout,
+	}
+
+	localRepoPath := filepath.Join(EnvDir, strings.Split(path.Base(repoUrl), ".")[0])
+	r, err := git.PlainClone(localRepoPath, false, cloneOptions)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
