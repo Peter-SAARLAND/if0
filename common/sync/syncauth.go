@@ -1,4 +1,4 @@
-package common
+package sync
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+	"if0/common"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -64,7 +65,7 @@ func getHttpAuth(authObj AuthOps) (transport.AuthMethod, error) {
 }
 
 func getSSHAuth(authObj AuthOps) (*gitssh.PublicKeys, error) {
-	sshKeyPath := filepath.Join(RootPath, ".ssh", "id_rsa")
+	sshKeyPath := filepath.Join(common.RootPath, ".ssh", "id_rsa")
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
 		fmt.Println("Error while reading SSH key: ", err)

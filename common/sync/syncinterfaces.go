@@ -1,4 +1,4 @@
-package common
+package sync
 
 import (
 	"github.com/go-git/go-git/v5"
@@ -6,6 +6,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	log "github.com/sirupsen/logrus"
+	"if0/common"
 	"os"
 	"path"
 	"path/filepath"
@@ -50,7 +51,6 @@ func (s *Sync) AddRemote(remoteStorage string, r *git.Repository) error {
 }
 
 func (s *Sync) Open(if0Dir string) (*git.Repository, error) {
-	log.Println("Git repository already present.")
 	return git.PlainOpen(if0Dir)
 }
 
@@ -101,14 +101,14 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 }
 
 func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	log.Printf("Cloning the git repository %s at %s", repoUrl, EnvDir)
+	log.Printf("Cloning the git repository %s at %s", repoUrl, common.EnvDir)
 	cloneOptions := &git.CloneOptions{
 		URL:      repoUrl,
 		Auth:     auth,
 		Progress: os.Stdout,
 	}
 
-	localRepoPath := filepath.Join(EnvDir, strings.Split(path.Base(repoUrl), ".")[0])
+	localRepoPath := filepath.Join(common.EnvDir, strings.Split(path.Base(repoUrl), ".")[0])
 	r, err := git.PlainClone(localRepoPath, false, cloneOptions)
 	if err != nil {
 		return nil, err
