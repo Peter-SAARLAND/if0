@@ -9,15 +9,14 @@ import (
 	"if0/common"
 	"if0/common/sync"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
 var (
 	GitRepoSync = GitSync
 	repoUrl = getRepoUrl
+	checkForLocalChanges = localChanges
 )
 
 // RepoSync is used to synchronize the if0 configuration files with a remote git repository
@@ -97,7 +96,7 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 
 	if auto {
 		fmt.Println("Pushing the local changes")
-		w, err := r.Worktree()
+		w, err := syncObj.GetWorktree(r)
 		if err != nil {
 			log.Errorln("Worktree error: ", err)
 		}
@@ -124,10 +123,10 @@ func getRepoUrl(r *git.Repository) string {
 	return remotes.Config().URLs[0]
 }
 
-func checkForLocalChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, error) {
+func localChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, error) {
 	var auto, manual bool
 	// worktree
-	w, err := r.Worktree()
+	w, err := syncObj.GetWorktree(r)
 	if err != nil {
 		log.Errorln("Worktree error: ", err)
 		return false, false, err
@@ -176,26 +175,4 @@ func getStatus(syncObj sync.SyncOps, w *git.Worktree) (git.Status, error) {
 		return nil, err
 	}
 	return status, nil
-}
-
-// WORKAROUND for git pull as git.Pull deletes unstaged changes.
-func gitPull(if0Dir string) error {
-	err := os.Chdir(if0Dir)
-	if err != nil {
-		fmt.Println("err chdir - ", err)
-	}
-	log.Println("Pulling changes")
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", "git", "pull", "origin", "master")
-	} else {
-		cmd = exec.Command("git", "pull", "origin", "master")
-	}
-
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.Errorln("Error while doing git pull - ", string(out))
-		return errors.New(string(out))
-	}
-	return nil
 }

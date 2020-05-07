@@ -24,6 +24,7 @@ type SyncOps interface {
 	Commit(w *git.Worktree) error
 	Push(auth transport.AuthMethod, r *git.Repository) error
 	Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error)
+	GetWorktree(r *git.Repository) (*git.Worktree, error)
 }
 
 type Sync struct {
@@ -114,4 +115,8 @@ func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository
 		return nil, err
 	}
 	return r, nil
+}
+
+func (s *Sync) GetWorktree(r *git.Repository) (*git.Worktree, error) {
+	return r.Worktree()
 }

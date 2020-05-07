@@ -17,6 +17,11 @@ type mockSync struct {
 	mock.Mock
 }
 
+func (m *mockSync) GetWorktree(r *git.Repository) (*git.Worktree, error) {
+	args := m.Called()
+	return args.Get(0).(*git.Worktree), args.Error(1)
+}
+
 func (m *mockSync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
 	args := m.Called()
 	return args.Get(0).(*git.Repository), args.Error(1)
@@ -126,21 +131,27 @@ func TestRepoSyncError(t *testing.T) {
 	assert.EqualError(t, err, "test-repo-sync-error")
 }
 
-//func TestGitSync(t *testing.T) {
-//	getSyncAuth = func(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error) {
-//		auth := &http.BasicAuth{Username: "test-user", Password: "test-password"}
-//		return auth, nil
-//	}
-//	testSyncObj := new(mockSync)
-//	if0Dir = "config"
-//	testSyncObj.On("GitInit").Return(&git.Repository{}, nil)
-//	testSyncObj.On("addRemote").Return(nil)
-//	testSyncObj.On("open").Return(&git.Repository{}, nil)
-//	testSyncObj.On("pull").Return(&git.Worktree{}, nil)
-//	testSyncObj.On("status").Return(git.Status{}, nil)
-//	testSyncObj.On("addFile").Return(nil)
-//	testSyncObj.On("commit").Return(nil)
-//	testSyncObj.On("push").Return(nil)
-//	err := GitSync(testSyncObj, "http://sample-storage", false)
-//	assert.Nil(t, err)
-//}
+func TestGitSync(t *testing.T) {
+	sync.GetSyncAuth = func(authObj sync.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
+		return nil, nil
+	}
+	repoUrl = func(r *git.Repository) string {
+		return "sample-url"
+	}
+	checkForLocalChanges = func(syncObj sync.SyncOps, r *git.Repository) (bool, bool, error) {
+		return true, false, nil
+	}
+	common.If0Dir = "config"
+	testSyncObj := new(mockSync)
+	testSyncObj.On("GitInit").Return(&git.Repository{}, nil)
+	testSyncObj.On("AddRemote").Return(nil)
+	testSyncObj.On("Open").Return(&git.Repository{}, nil)
+	testSyncObj.On("Pull").Return(&git.Worktree{}, nil)
+	testSyncObj.On("Status").Return(git.Status{}, nil)
+	testSyncObj.On("GetWorktree").Return(&git.Worktree{}, nil)
+	testSyncObj.On("AddFile").Return(nil)
+	testSyncObj.On("Commit").Return(nil)
+	testSyncObj.On("Push").Return(nil)
+	err := GitSync(testSyncObj, "http://sample-storage", false)
+	assert.Nil(t, err)
+}
