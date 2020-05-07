@@ -11,15 +11,15 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	exitVal := m.Run()
-	fmt.Println("Teardown")
-	err := os.RemoveAll("testif0")
-	if err != nil {
-		fmt.Println(err)
-	}
-	os.Exit(exitVal)
-}
+//func TestMain(m *testing.M) {
+//	exitVal := m.Run()
+//	fmt.Println("Teardown")
+//	err := os.RemoveAll("testif0")
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//	os.Exit(exitVal)
+//}
 
 func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.RootPath = "config"
@@ -91,6 +91,7 @@ func TestMergeFilesEnvironment(t *testing.T) {
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
 	assert.Equal(t, "zeroval2", configMap["zerokey2"])
+	_ = os.Remove(testConfig)
 }
 
 func TestMergeConfigFilesInvalid(t *testing.T) {
@@ -208,6 +209,7 @@ func TestGarbageCollection(t *testing.T) {
 	GarbageCollection()
 	f, _ := ioutil.ReadDir(common.SnapshotsDir)
 	assert.Equal(t, 0, len(f))
+	_ = os.RemoveAll("testif0")
 }
 
 func TestParseGcAutoStr(t *testing.T) {
