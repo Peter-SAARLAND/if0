@@ -34,7 +34,6 @@ func (s *Sync) GitInit(localRepoPath string) (*git.Repository, error) {
 	log.Println("Creating a git repository at ", localRepoPath)
 	r, err := git.PlainInit(localRepoPath, false)
 	if err != nil {
-		log.Errorln("Error while creating a git repository: ", err)
 		return nil, err
 	}
 	return r, nil
@@ -45,7 +44,6 @@ func (s *Sync) AddRemote(remoteStorage string, r *git.Repository) error {
 	remoteConfig := &config.RemoteConfig{Name: "origin", URLs: []string{remoteStorage}}
 	_, err := r.CreateRemote(remoteConfig)
 	if err != nil {
-		log.Errorln("Error while adding remote: ", err)
 		return err
 	}
 	return nil
@@ -59,12 +57,10 @@ func (s *Sync) Pull(remoteStorage string, r *git.Repository, pullOptions *git.Pu
 	log.Println("Pulling in changes from ", remoteStorage)
 	w, err := r.Worktree()
 	if err != nil {
-		log.Errorln("Worktree error: ", err)
 		return nil, err
 	}
 	err = w.Pull(pullOptions)
 	if err != nil {
-		log.Errorln("Pull Status: ", err)
 		return w, err
 	}
 	return w, nil

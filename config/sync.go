@@ -91,7 +91,12 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 	pullOptions := &git.PullOptions{Auth: auth, RemoteName: "origin", Force: false}
 	_, err = syncObj.Pull(repo, r, pullOptions)
 	if err != nil {
-		log.Errorln("Pull status: ", err)
+		if err == git.NoErrAlreadyUpToDate {
+			log.Println("Pull status: ", err)
+		} else {
+			log.Errorln("Pull status: ", err)
+			return err
+		}
 	}
 
 	if auto {
