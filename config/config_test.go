@@ -11,16 +11,6 @@ import (
 	"testing"
 )
 
-//func TestMain(m *testing.M) {
-//	exitVal := m.Run()
-//	fmt.Println("Teardown")
-//	err := os.RemoveAll("testif0")
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	os.Exit(exitVal)
-//}
-
 func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.RootPath = "config"
 	common.If0Dir = "testif0"

@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"if0/config"
@@ -90,12 +91,16 @@ var (
 			config.GarbageCollection()
 
 			//
+			//if sync {
+			//	err := config.RepoSync()
+			//	if err != nil {
+			//		log.Errorln("Error while syncing with remote repo: ", err)
+			//		return
+			//	}
+			//}
 			if sync {
-				err := config.RepoSync()
-				if err != nil {
-					log.Errorln("Error while syncing with remote repo: ", err)
-					return
-				}
+				fmt.Println("if0 config --sync functionality temporarily disabled.")
+				return
 			}
 		},
 	}
