@@ -18,7 +18,8 @@ type mockSync struct {
 }
 
 func (m *mockSync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	panic("implement me")
+	args := m.Called()
+	return args.Get(0).(*git.Repository), args.Error(1)
 }
 
 func (m *mockSync) GitInit(localRepoPath string) (*git.Repository, error) {

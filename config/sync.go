@@ -144,13 +144,12 @@ func checkForLocalChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, 
 			"If the repository is not up-to-date, pulling in changes would delete the unstaged changes. \n" +
 			"Other changes would be overwritten by the remote changes.")
 		fmt.Println(status)
-		fmt.Println("Enter 'y' to proceed. \n" +
-			"Enter 'n' to exit `sync` and add/stash the changes manually. ")
+		fmt.Println("Proceed? [Y/n]")
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
 		// if the user chooses 'y', add/commit/push changes
-		switch strings.TrimSpace(text) {
-		case "y":
+		switch strings.TrimSpace(strings.ToLower(text)) {
+		case "y", "":
 			auto = true
 			manual = false
 			log.Println("Adding local changes")
@@ -161,12 +160,9 @@ func checkForLocalChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, 
 					return false, false, err
 				}
 			}
-		case "m":
-			auto = false
-			manual = true
 		case "n":
 			auto = false
-			manual = false
+			manual = true
 		}
 	}
 	return auto, manual, nil

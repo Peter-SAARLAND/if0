@@ -11,17 +11,23 @@ import (
 	"path/filepath"
 )
 
+var (
+	syncObj = sync.Sync{}
+	clone = syncObj.Clone
+	getAuth = sync.GetSyncAuth
+	repoSync = config.GitRepoSync
+)
+
 func AddEnv(repoUrl string) error {
 	// get authorization
 	authObj := sync.Auth{}
-	auth, err := sync.GetSyncAuth(&authObj, repoUrl)
+	auth, err := getAuth(&authObj, repoUrl)
 	if err != nil {
 		log.Errorln("Authentication error: ", err)
 		return err
 	}
 
-	syncObj := sync.Sync{}
-	_, err = syncObj.Clone(repoUrl, auth)
+	_, err = clone(repoUrl, auth)
 	if err != nil{
 		return err
 	}
@@ -34,15 +40,13 @@ func SyncEnv(repoName string) error {
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
 		fmt.Printf("The repository %s could not be found at %s. " +
 			"Add the repository before performing sync operation \n", repoName, common.EnvDir)
-		return errors.New("repo not found")
+		return errors.New("repository not found")
 	}
 
-	syncObj := sync.Sync{}
-	err := config.GitRepoSync(&syncObj, repoPath, false)
+	err := repoSync(&syncObj, repoPath, false)
 	if err != nil {
 		log.Errorln("Error while syncing external repo: ", err)
 		return err
 	}
-
 	return nil
 }

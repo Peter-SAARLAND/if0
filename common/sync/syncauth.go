@@ -1,6 +1,7 @@
 package sync
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
@@ -43,6 +44,8 @@ func getAuth(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error
 			log.Errorln("Error while fetching credentials: ", err)
 			return nil, err
 		}
+	} else {
+		return nil, errors.New("invalid REMOTE_STORAGE link")
 	}
 	return auth, nil
 }
