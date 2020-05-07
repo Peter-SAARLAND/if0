@@ -9,7 +9,6 @@ import (
 	"if0/common"
 	"if0/common/sync"
 	"os"
-	"path/filepath"
 	"testing"
 )
 
@@ -94,16 +93,6 @@ func TestGitSyncInitError(t *testing.T) {
 	testSyncObj.On("GitInit").Return(&git.Repository{}, errors.New("test-init-error"))
 	err := GitSync(testSyncObj, "http://sample-storage", true)
 	assert.EqualError(t, err, "test-init-error")
-}
-
-func TestGitInit(t *testing.T) {
-	common.If0Dir = "config"
-	var testSyncObj sync.Sync
-	err := GitSync(&testSyncObj, "http://sample-storage", true)
-	gitDir := filepath.Join("config", ".git")
-	assert.DirExists(t, gitDir)
-	assert.Nil(t, err)
-	_ = os.RemoveAll(common.If0Dir)
 }
 
 func TestGitSyncRemoteError(t *testing.T) {
