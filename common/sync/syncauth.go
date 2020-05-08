@@ -6,7 +6,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 	"if0/common"
@@ -35,13 +34,13 @@ func getAuth(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error
 	if strings.Contains(remoteStorage, "http") {
 		auth, err = getHttpAuth(authObj)
 		if err != nil {
-			log.Errorln("Error while fetching credentials: ", err)
+			fmt.Println("Error: HTTP Authorization - ", err)
 			return nil, err
 		}
 	} else if strings.Contains(remoteStorage, "git@") {
 		auth, err = getSSHAuth(authObj)
 		if err != nil {
-			log.Errorln("Error while fetching credentials: ", err)
+			fmt.Println("Error: SSH Authorization - ", err)
 			return nil, err
 		}
 	} else {
@@ -54,13 +53,13 @@ func getHttpAuth(authObj AuthOps) (transport.AuthMethod, error) {
 	fmt.Println("Enter Username: ")
 	userName, err := authObj.readPassword()
 	if err != nil {
-		fmt.Printf("Failed to read username: %v", err)
+		fmt.Println("Error: Reading username - ", err)
 		return nil, err
 	}
 	fmt.Println("Enter Password: ")
 	bytePassword, err := authObj.readPassword()
 	if err != nil {
-		fmt.Printf("Failed to read password: %v", err)
+		fmt.Println("Error: Reading password - ", err)
 		return nil, err
 	}
 	auth := &http.BasicAuth{Username: string(userName), Password: string(bytePassword)}
@@ -71,7 +70,7 @@ func getSSHAuth(authObj AuthOps) (*gitssh.PublicKeys, error) {
 	sshKeyPath := filepath.Join(common.RootPath, ".ssh", "id_rsa")
 	sshKey, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
-		fmt.Println("Error while reading SSH key: ", err)
+		fmt.Println("Error: Reading SSH key - ", err)
 		return nil, err
 	}
 	signer, err := authObj.parseSSHKey(sshKey)
@@ -80,12 +79,12 @@ func getSSHAuth(authObj AuthOps) (*gitssh.PublicKeys, error) {
 			fmt.Println("Passphrase required. Enter Passphrase")
 			passphrase, err := authObj.readPassword()
 			if err != nil {
-				log.Println("Error while reading passphrase: ", err)
+				fmt.Println("Error: Reading passphrase - ", err)
 				return nil, err
 			}
 			signer, err = authObj.parseSSHKeyWithPassphrase(sshKey, passphrase)
 			if err != nil {
-				fmt.Println("Error while parsing SSH key: ", err)
+				fmt.Println("Error: Parsing SSH key - ", err)
 				return nil, err
 			}
 		} else {

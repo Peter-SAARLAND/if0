@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"if0/environments"
 )
@@ -45,7 +44,7 @@ var environmentCmd = &cobra.Command{
 		if clone {
 			err := environments.AddEnv(repoUrl)
 			if err != nil {
-				log.Errorln("Error adding repo - ", err)
+				fmt.Println("Error: Adding repo - ", err)
 				return
 			}
 		}
@@ -56,7 +55,7 @@ var environmentCmd = &cobra.Command{
 		if sync {
 			err := environments.SyncEnv(repoName)
 			if err != nil {
-				log.Errorln("Error syncing repo - ", err)
+				fmt.Println("Error: Syncing repo - ", err)
 				return
 			}
 		}

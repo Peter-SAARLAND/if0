@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"if0/common"
 	"if0/common/sync"
 	"os"
@@ -22,14 +21,14 @@ var (
 // RepoSync is used to synchronize the if0 configuration files with a remote git repository
 func RepoSync() error {
 	remoteStorage := GetEnvVariable("REMOTE_STORAGE")
-	log.Println("Syncing with remote storage: ", remoteStorage)
+	fmt.Println("Syncing with remote storage: ", remoteStorage)
 	if remoteStorage == "" {
 		return errors.New("REMOTE_STORAGE is not set.")
 	}
 	syncObj := sync.Sync{}
 	err := GitRepoSync(&syncObj, remoteStorage, true)
 	if err != nil {
-		log.Errorln("Error while syncing external repo: ", err)
+		fmt.Println("Error:Syncing external repo - ", err)
 		return err
 	}
 	return nil
@@ -62,7 +61,7 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		// open the existing repo at ~/.if0
 		r, err = syncObj.Open(dir)
 		if err != nil {
-			log.Errorln("Error while opening repository: ", err)
+			fmt.Println("Error: Opening repository - ", err)
 			return err
 		}
 		repo = repoUrl(r)
@@ -74,7 +73,7 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 	authObj := sync.Auth{}
 	auth, err := sync.GetSyncAuth(&authObj, repo)
 	if err != nil {
-		log.Errorln("Authentication error: ", err)
+		fmt.Println("Authentication Error - ", err)
 		return err
 	}
 
@@ -92,9 +91,9 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 	_, err = syncObj.Pull(repo, r, pullOptions)
 	if err != nil {
 		if err == git.NoErrAlreadyUpToDate {
-			log.Println("Pull status: ", err)
+			fmt.Println("Pull status: ", err)
 		} else {
-			log.Errorln("Pull status: ", err)
+			fmt.Println("Error: Pull status - ", err)
 			return err
 		}
 	}
@@ -103,17 +102,17 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		fmt.Println("Pushing the local changes")
 		w, err := syncObj.GetWorktree(r)
 		if err != nil {
-			log.Errorln("Worktree error: ", err)
+			fmt.Println("Worktree Error: ", err)
 		}
 		// git commit
 		err = syncObj.Commit(w)
 		if err != nil {
-			log.Errorln("Error while committing changes: ", err)
+			fmt.Println("Error: Committing changes - ", err)
 		}
 		// git push
 		err = syncObj.Push(auth, r)
 		if err != nil {
-			log.Errorln("Error while pushing changes: ", err)
+			fmt.Println("Error: Pushing changes - ", err)
 			return err
 		}
 	}
@@ -123,7 +122,7 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 func getRepoUrl(r *git.Repository) string {
 	remotes, err := r.Remote("origin")
 	if err != nil {
-		log.Errorln("remotes error - ", err)
+		fmt.Println("Error: Remotes - ", err)
 	}
 	return remotes.Config().URLs[0]
 }
@@ -133,7 +132,7 @@ func localChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, error) {
 	// worktree
 	w, err := syncObj.GetWorktree(r)
 	if err != nil {
-		log.Errorln("Worktree error: ", err)
+		fmt.Println("Worktree Error - ", err)
 		return false, false, err
 	}
 
@@ -156,11 +155,11 @@ func localChanges(syncObj sync.SyncOps, r *git.Repository) (bool, bool, error) {
 		case "y", "":
 			auto = true
 			manual = false
-			log.Println("Adding local changes")
+			fmt.Println("Adding local changes")
 			for file, _ := range status {
 				err := syncObj.AddFile(w, file)
 				if err != nil {
-					log.Errorf("Error adding file %s: %s \n", file, err)
+					fmt.Printf("Error: Adding file %s: %s \n", file, err)
 					return false, false, err
 				}
 			}
@@ -176,7 +175,7 @@ func getStatus(syncObj sync.SyncOps, w *git.Worktree) (git.Status, error) {
 	// git status
 	status, err := syncObj.Status(w)
 	if err != nil {
-		fmt.Println("status err: ", err)
+		fmt.Println("Error: Status - ", err)
 		return nil, err
 	}
 	return status, nil

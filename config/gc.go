@@ -1,8 +1,8 @@
 package config
 
 import (
+	"fmt"
 	"github.com/djherbis/times"
-	log "github.com/sirupsen/logrus"
 	"if0/common"
 	"io/ioutil"
 	"os"
@@ -20,7 +20,7 @@ func GarbageCollection() {
 	if gc {
 		files, err := ioutil.ReadDir(common.SnapshotsDir)
 		if err != nil {
-			log.Errorln("error while reading snaphots: ", err)
+			fmt.Println("Error: Reading snaphots: ", err)
 			return
 		}
 		for _, f := range files {
@@ -37,7 +37,7 @@ func getCreationTome(f os.FileInfo) time.Time {
 	var creationTime time.Time
 	t, err := times.Stat(filepath.Join(common.SnapshotsDir, f.Name()))
 	if err != nil {
-		log.Errorln(err)
+		fmt.Println(err)
 	}
 	if times.HasBirthTime {
 		creationTime = t.BirthTime()

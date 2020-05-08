@@ -1,11 +1,11 @@
 package sync
 
 import (
+	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	log "github.com/sirupsen/logrus"
 	"if0/common"
 	"os"
 	"path"
@@ -31,7 +31,7 @@ type Sync struct {
 }
 
 func (s *Sync) GitInit(localRepoPath string) (*git.Repository, error) {
-	log.Println("Creating a git repository at ", localRepoPath)
+	fmt.Println("Creating a git repository at ", localRepoPath)
 	r, err := git.PlainInit(localRepoPath, false)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (s *Sync) GitInit(localRepoPath string) (*git.Repository, error) {
 }
 
 func (s *Sync) AddRemote(remoteStorage string, r *git.Repository) error {
-	log.Println("Adding remote 'origin' for the repository at ", remoteStorage)
+	fmt.Println("Adding remote 'origin' for the repository at ", remoteStorage)
 	remoteConfig := &config.RemoteConfig{Name: "origin", URLs: []string{remoteStorage}}
 	_, err := r.CreateRemote(remoteConfig)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *Sync) Open(if0Dir string) (*git.Repository, error) {
 }
 
 func (s *Sync) Pull(remoteStorage string, r *git.Repository, pullOptions *git.PullOptions) (*git.Worktree, error) {
-	log.Println("Pulling in changes from ", remoteStorage)
+	fmt.Println("Pulling in changes from ", remoteStorage)
 	w, err := r.Worktree()
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (s *Sync) Commit(w *git.Worktree) error {
 }
 
 func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
-	log.Println("Pushing local changes")
+	fmt.Println("Pushing local changes")
 	pushOptions := &git.PushOptions{
 		RemoteName: "origin",
 		Auth:       auth,
@@ -98,7 +98,7 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 }
 
 func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	log.Printf("Cloning the git repository %s at %s", repoUrl, common.EnvDir)
+	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, common.EnvDir)
 	cloneOptions := &git.CloneOptions{
 		URL:      repoUrl,
 		Auth:     auth,

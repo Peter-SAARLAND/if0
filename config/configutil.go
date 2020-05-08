@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"if0/common"
 	"io/ioutil"
@@ -54,7 +53,7 @@ func writeToConfigFile(runningConfigFile string, currentConfigMap map[string]int
 	s := strings.Join(lines, "\n")
 	err := ioutil.WriteFile(runningConfigFile, []byte(s), 0644)
 	if err != nil {
-		log.Errorln("Error while merging config files: ", err)
+		fmt.Println("Error: Merging config files - ", err)
 		return
 	}
 }
@@ -67,15 +66,15 @@ func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	if zero {
 		// creating a .environments directory to store zero-cluster configurations, if it does not exist.
 		if _, err := os.Stat(common.EnvDir); os.IsNotExist(err) {
-			log.Debugln("Directory does not exist, creating dir for snapshots")
+			fmt.Println("Directory does not exist, creating dir for snapshots")
 			_ = os.Mkdir(common.EnvDir, os.ModeDir)
 		}
 		// setting configuration file path to update zero-cluster configuration
-		log.Println("Updating zero cluster configuration with ", srcConfigFile)
+		fmt.Println("Updating zero cluster configuration with ", srcConfigFile)
 		runningConfigFile = filepath.Join(common.EnvDir, filepath.Base(srcConfigFile))
 	} else {
 		// setting configuration file path to update if0.env configuration
-		log.Println("Updating if0.env configuration with ", srcConfigFile)
+		fmt.Println("Updating if0.env configuration with ", srcConfigFile)
 		runningConfigFile = common.If0Default
 	}
 	return runningConfigFile
@@ -86,7 +85,7 @@ func readConfigFile(configFile string) {
 	viper.SetConfigFile(configFile)
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Errorln("Error while reading config file: ", err)
+		fmt.Println("Error: while reading config file - ", err)
 		return
 	}
 }
@@ -96,7 +95,7 @@ func createConfigFile(srcConfigFile, runningConfigFile string) error {
 	readConfigFile(srcConfigFile)
 	err := viper.WriteConfigAs(runningConfigFile)
 	if err != nil {
-		log.Errorln("Failed to add/update the config file: ", err)
+		fmt.Println("Error: Failed to add/update the config file - ", err)
 		return err
 	}
 	return nil
@@ -117,7 +116,7 @@ func isFilePresent(fileName string) bool {
 // example: if0-02042020_170240.env
 func backupToSnapshots(fileName string) error {
 	if _, err := os.Stat(common.SnapshotsDir); os.IsNotExist(err) {
-		log.Debugln("Directory does not exist, creating dir for snapshots")
+		fmt.Println("Directory does not exist, creating dir for snapshots")
 		_ = os.Mkdir(common.SnapshotsDir, os.ModeDir)
 	}
 	timestamp := string(time.Now().Format("02012006_150405"))
@@ -125,7 +124,7 @@ func backupToSnapshots(fileName string) error {
 	readConfigFile(fileName)
 	err := viper.WriteConfigAs(bkpFile)
 	if err != nil {
-		log.Errorln("Error while writing to backup file: ", err)
+		fmt.Println("Error: while writing to backup file - ", err)
 		return errors.New("backup of previous config failed")
 	}
 	return nil

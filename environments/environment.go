@@ -3,7 +3,6 @@ package environments
 import (
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
@@ -23,7 +22,7 @@ func AddEnv(repoUrl string) error {
 	authObj := sync.Auth{}
 	auth, err := getAuth(&authObj, repoUrl)
 	if err != nil {
-		log.Errorln("Authentication error: ", err)
+		fmt.Println("Authentication error - ", err)
 		return err
 	}
 
@@ -45,7 +44,7 @@ func SyncEnv(repoName string) error {
 
 	err := repoSync(&syncObj, repoPath, false)
 	if err != nil {
-		log.Errorln("Error while syncing external repo: ", err)
+		fmt.Println("Error: Syncing external repo - ", err)
 		return err
 	}
 	return nil
