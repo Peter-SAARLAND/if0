@@ -24,6 +24,7 @@ func SetEnvVariable(key, value string) {
 
 // GetEnvVariable retrieves the value of a config variable
 func GetEnvVariable(key string) string {
+	viper.AutomaticEnv()
 	val := viper.Get(key)
 	return cast.ToString(val)
 }

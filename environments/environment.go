@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"syscall"
 )
 
@@ -59,13 +58,6 @@ func LoadEnv(envDir string) error {
 	envConfig := readAllEnvFiles(envDir)
 	for k, v := range envConfig {
 		config.SetEnvVariable(k, v.(string))
-	}
-	fmt.Printf("Current Configuration at %s...\n", envDir)
-	for k, _ := range envConfig {
-		viper.AutomaticEnv()
-		key := strings.ToUpper(k)
-		val := config.GetEnvVariable(key)
-		fmt.Println(key, ":", val)
 	}
 	err := syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
 	if err != nil {
