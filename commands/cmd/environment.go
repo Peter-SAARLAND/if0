@@ -18,7 +18,10 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"if0/common"
 	"if0/environments"
+	"os"
+	"path/filepath"
 )
 
 const (
@@ -33,15 +36,19 @@ var environmentCmd = &cobra.Command{
 	Short: "add zero config repository to environments",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		// checking if the required arguments are present
-		if len(args) < 2 {
+		if len(args) < 1 {
 			fmt.Println("Please provide valid arguments.")
-			fmt.Println("example command: if0 environment add git@gitlab.com:abc/def.git")
+			fmt.Println("accepted args: 'add', 'sync', 'load'")
 			return
 		}
 		// cloning
-		repoUrl := args[1]
 		if args[0] == addArg {
+			if len(args) < 2 {
+				fmt.Println("Please provide valid arguments.")
+				fmt.Println("example command: if0 environment add git@gitlab.com:abc/def.git")
+				return
+			}
+			repoUrl := args[1]
 			err := environments.AddEnv(repoUrl)
 			if err != nil {
 				fmt.Println("Error: Adding repo - ", err)
@@ -50,8 +57,13 @@ var environmentCmd = &cobra.Command{
 		}
 
 		// syncing
-		repoName := args[1]
 		if args[0] == syncArg {
+			if len(args) < 2 {
+				fmt.Println("Please provide valid arguments.")
+				fmt.Println("example command: if0 environment sync if0-config")
+				return
+			}
+			repoName := args[1]
 			err := environments.SyncEnv(repoName)
 			if err != nil {
 				fmt.Println("Error: Syncing repo - ", err)
@@ -60,10 +72,15 @@ var environmentCmd = &cobra.Command{
 		}
 
 		// loading Environment
-		envName := args[1]
 		if args[0] == loadArg {
-			fmt.Printf("Loading configuration for %s zero environment...\n", envName)
-			err := environments.LoadEnv(envName)
+			var envDir string
+			if len(args) < 2 {
+				envDir, _ = os.Getwd()
+			} else {
+				envDir = filepath.Join(common.EnvDir, args[1])
+			}
+			fmt.Printf("Loading configuration from %s \n", envDir)
+			err := environments.LoadEnv(envDir)
 			if err != nil {
 				fmt.Println("Error: Loading repo - ", err)
 				return

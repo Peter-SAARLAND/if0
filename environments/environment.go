@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -53,31 +54,27 @@ func SyncEnv(repoName string) error {
 	return nil
 }
 
-func LoadEnv(envName string) error {
-	fmt.Println("Syncing environment", envName)
-	err := SyncEnv(envName)
-	if err != nil {
-		return err
-	}
-	envDir := filepath.Join(common.EnvDir, envName)
+func LoadEnv(envDir string) error {
 	fmt.Println("Reading .env files from", envDir)
 	envConfig := readAllEnvFiles(envDir)
 	for k, v := range envConfig {
 		config.SetEnvVariable(k, v.(string))
 	}
-	fmt.Printf("%s environment configuration:\n", envName)
+	fmt.Printf("Current Configuration at %s...\n", envDir)
 	for k, _ := range envConfig {
 		viper.AutomaticEnv()
 		key := strings.ToUpper(k)
 		val := config.GetEnvVariable(key)
 		fmt.Println(key, ":", val)
 	}
+	err := syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
+	if err != nil {
+		fmt.Println("Error: Opening shell - ", err)
+	}
 	return nil
 }
 
 func readAllEnvFiles(dirPath string) map[string]interface{}{
-	//viper.AddConfigPath(dirPath)
-	//viper.SetConfigType("env")
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		fmt.Printf("Error: Reading environment directory %s - %s\n", dirPath, err)
