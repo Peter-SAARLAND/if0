@@ -24,6 +24,7 @@ import (
 const (
 	addArg  = "add"
 	syncArg = "sync"
+	loadArg = "load"
 )
 
 // environmentCmd represents the environment command
@@ -39,9 +40,8 @@ var environmentCmd = &cobra.Command{
 			return
 		}
 		// cloning
-		clone := args[0] == addArg
 		repoUrl := args[1]
-		if clone {
+		if args[0] == addArg {
 			err := environments.AddEnv(repoUrl)
 			if err != nil {
 				fmt.Println("Error: Adding repo - ", err)
@@ -50,12 +50,22 @@ var environmentCmd = &cobra.Command{
 		}
 
 		// syncing
-		sync := args[0] == syncArg
 		repoName := args[1]
-		if sync {
+		if args[0] == syncArg {
 			err := environments.SyncEnv(repoName)
 			if err != nil {
 				fmt.Println("Error: Syncing repo - ", err)
+				return
+			}
+		}
+
+		// loading Environment
+		envName := args[1]
+		if args[0] == loadArg {
+			fmt.Printf("Loading configuration for %s zero environment...\n", envName)
+			err := environments.LoadEnv(envName)
+			if err != nil {
+				fmt.Println("Error: Loading repo - ", err)
 				return
 			}
 		}

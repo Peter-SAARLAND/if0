@@ -14,11 +14,11 @@ import (
 
 // SetEnvVariable sets a config variable
 func SetEnvVariable(key, value string) {
-	key = strings.TrimSpace(key)
+	key = strings.ToUpper(strings.TrimSpace(key))
 	value = strings.TrimSpace(value)
-	viper.Set(key, value)
-	if value == GetEnvVariable(key) {
-		fmt.Printf("key %s update with %s successful \n", key, value)
+	err := os.Setenv(key, value)
+	if err != nil {
+		fmt.Printf("Error: Setting env variable %s - %s\n", key, err)
 	}
 }
 

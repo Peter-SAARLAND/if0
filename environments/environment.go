@@ -3,11 +3,14 @@ package environments
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -48,4 +51,53 @@ func SyncEnv(repoName string) error {
 		return err
 	}
 	return nil
+}
+
+func LoadEnv(envName string) error {
+	fmt.Println("Syncing environment", envName)
+	err := SyncEnv(envName)
+	if err != nil {
+		return err
+	}
+	envDir := filepath.Join(common.EnvDir, envName)
+	fmt.Println("Reading .env files from", envDir)
+	envConfig := readAllEnvFiles(envDir)
+	for k, v := range envConfig {
+		config.SetEnvVariable(k, v.(string))
+	}
+	fmt.Printf("%s environment configuration:\n", envName)
+	for k, _ := range envConfig {
+		viper.AutomaticEnv()
+		key := strings.ToUpper(k)
+		val := config.GetEnvVariable(key)
+		fmt.Println(key, ":", val)
+	}
+	return nil
+}
+
+func readAllEnvFiles(dirPath string) map[string]interface{}{
+	//viper.AddConfigPath(dirPath)
+	//viper.SetConfigType("env")
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		fmt.Printf("Error: Reading environment directory %s - %s\n", dirPath, err)
+		return nil
+	}
+	allConfig := make(map[string]interface{})
+	for _, file := range files {
+		fileName := filepath.Join(dirPath, file.Name())
+		if filepath.Ext(fileName) == ".env" {
+			viper.SetConfigFile(fileName)
+			err := viper.ReadInConfig()
+			if err != nil {
+				fmt.Printf("Error: while reading %s file - %s\n", fileName, err)
+				continue
+			}
+			currConfig := viper.AllSettings()
+			for k, v := range currConfig {
+				allConfig[k] = v
+			}
+		}
+	}
+	return allConfig
 }
