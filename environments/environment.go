@@ -3,11 +3,14 @@ package environments
 import (
 	"errors"
 	"fmt"
+	"github.com/spf13/viper"
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 var (
@@ -48,4 +51,42 @@ func SyncEnv(repoName string) error {
 		return err
 	}
 	return nil
+}
+
+func LoadEnv(envDir string) error {
+	fmt.Println("Reading .env files from", envDir)
+	envConfig := readAllEnvFiles(envDir)
+	for k, v := range envConfig {
+		config.SetEnvVariable(k, v.(string))
+	}
+	err := syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
+	if err != nil {
+		fmt.Println("Error: Opening shell - ", err)
+	}
+	return nil
+}
+
+func readAllEnvFiles(dirPath string) map[string]interface{}{
+	files, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		fmt.Printf("Error: Reading environment directory %s - %s\n", dirPath, err)
+		return nil
+	}
+	allConfig := make(map[string]interface{})
+	for _, file := range files {
+		fileName := filepath.Join(dirPath, file.Name())
+		if filepath.Ext(fileName) == ".env" {
+			viper.SetConfigFile(fileName)
+			err := viper.ReadInConfig()
+			if err != nil {
+				fmt.Printf("Error: while reading %s file - %s\n", fileName, err)
+				continue
+			}
+			currConfig := viper.AllSettings()
+			for k, v := range currConfig {
+				allConfig[k] = v
+			}
+		}
+	}
+	return allConfig
 }
