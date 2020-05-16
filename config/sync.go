@@ -90,7 +90,7 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 	pullOptions := &git.PullOptions{Auth: auth, RemoteName: "origin", Force: false}
 	_, err = syncObj.Pull(repo, r, pullOptions)
 	if err != nil {
-		if err == git.NoErrAlreadyUpToDate {
+		if err == git.NoErrAlreadyUpToDate || err.Error() == "remote repository is empty" {
 			fmt.Println("Pull status: ", err)
 		} else {
 			fmt.Println("Error: Pull status - ", err)
