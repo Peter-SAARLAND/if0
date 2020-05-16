@@ -76,11 +76,14 @@ func (s *Sync) AddFile(w *git.Worktree, file string) error {
 }
 
 func (s *Sync) Commit(w *git.Worktree) error {
+	name, email := getUserConfig()
 	commitMsg := "feat: updating config files - " + time.Now().Format("02012006_150405")
 	commitOptions := &git.CommitOptions{
 		All: false,
 		Author: &object.Signature{
 			When: time.Now(),
+			Name: name,
+			Email: email,
 		},
 	}
 	_, err := w.Commit(commitMsg, commitOptions)
