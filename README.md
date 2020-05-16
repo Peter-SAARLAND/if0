@@ -105,4 +105,17 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
         
     Reference: https://github.com/spf13/cobra/blob/master/cobra/README.md
 
-  
+4. #### `if0 version`
+    Run the following commands to build and install `if0` app with commit SHA as the version number.
+
+>     root@zero-gayathri-dev:~/if0# if0 version
+>     if0 version:
+>     root@zero-gayathri-dev:~/if0# export IF0VERSION=$(git rev-list -1 HEAD)
+>     root@zero-gayathri-dev:~/if0# go build -ldflags "-X main.Version=$IF0VERSION"
+>     root@zero-gayathri-dev:~/if0# go install -ldflags "-X main.Version=$IF0VERSION" if0
+>     root@zero-gayathri-dev:~/if0# if0 version
+>     if0 version: af6b3929a641e2ea9293f4c5956bbe9fc61f000f
+
+
+
+    

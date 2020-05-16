@@ -4,59 +4,50 @@ import (
 	"fmt"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/assert"
+	"if0/common"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 )
 
-func TestMain(m *testing.M) {
-	exitVal := m.Run()
-	fmt.Println("Teardown")
-	err := os.RemoveAll("testif0")
-	if err != nil {
-		fmt.Println(err)
-	}
-	os.Exit(exitVal)
-}
-
 func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
-	rootPath = "config"
-	if0Dir = "testif0"
-	if0Default = filepath.Join(if0Dir, "if0.env")
-	_ = os.RemoveAll(if0Dir)
+	common.RootPath = "config"
+	common.If0Dir = "testif0"
+	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	_ = os.RemoveAll(common.If0Dir)
 	out := readStdOutPrintCurrentRunningConfig()
-	assert.Equal(t, "ifo_version : 1\n", string(out))
+	assert.Contains(t, string(out), "ifo_version : 1\n")
 }
 
 func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
-	if0Dir = "testif0"
-	if0Default = filepath.Join(if0Dir, "if0.env")
+	common.If0Dir = "testif0"
+	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	out := readStdOutPrintCurrentRunningConfig()
 	assert.Equal(t, "ifo_version : 1\n", string(out))
 }
 
 func TestAddConfigFileReplace(t *testing.T) {
-	if0Dir = "testif0"
-	if0Default = filepath.Join(if0Dir, "if0.env")
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	common.If0Dir = "testif0"
+	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1"), 0644)
 	AddConfigFile(testConfig, false)
-	readConfigFile(if0Default)
+	readConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
 }
 
 func TestMergeConfigFiles(t *testing.T) {
-	if0Dir = "testif0"
-	if0Default = filepath.Join(if0Dir, "if0.env")
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	common.If0Dir = "testif0"
+	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	testConfig := "config2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey2=testval2\nIF0_VERSION=1"), 0644)
-	_ = MergeConfigFiles(testConfig, if0Default, false)
-	readConfigFile(if0Default)
+	_ = MergeConfigFiles(testConfig, common.If0Default, false)
+	readConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
@@ -65,13 +56,13 @@ func TestMergeConfigFiles(t *testing.T) {
 }
 
 func TestAddConfigFileEnvironment(t *testing.T) {
-	if0Dir = "testif0"
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
-	envDir = filepath.Join(if0Dir, ".environments")
+	common.If0Dir = "testif0"
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
+	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
 	testConfig := "zero1.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey1=zeroval1"), 0644)
 	AddConfigFile(testConfig, true)
-	readConfigFile(filepath.Join(envDir, testConfig))
+	readConfigFile(filepath.Join(common.EnvDir, testConfig))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
@@ -79,24 +70,25 @@ func TestAddConfigFileEnvironment(t *testing.T) {
 }
 
 func TestMergeFilesEnvironment(t *testing.T) {
-	if0Dir = "testif0"
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
-	envDir = filepath.Join(if0Dir, ".environments")
+	common.If0Dir = "testif0"
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
+	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
 	testConfig := "zero2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey2=zeroval2\nZERO_VERSION=2"), 0644)
 	_ = MergeConfigFiles(testConfig, "zero1.env", true)
-	readConfigFile(filepath.Join(envDir, "zero1.env"))
+	readConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
 	assert.Equal(t, "zeroval2", configMap["zerokey2"])
+	_ = os.Remove(testConfig)
 }
 
 func TestMergeConfigFilesInvalid(t *testing.T) {
-	if0Dir = "testif0"
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
-	envDir = filepath.Join(if0Dir, ".environments")
-	if0Default = filepath.Join(if0Dir, "if0.env")
+	common.If0Dir = "testif0"
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
+	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
+	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	err := MergeConfigFiles("abc.env", "", false)
 	assert.Error(t, err)
 }
@@ -190,23 +182,24 @@ func TestMergeConfigFilesNoSrc(t *testing.T) {
 }
 
 func TestGarbageCollectionNo(t *testing.T) {
-	if0Dir = "testif0"
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	common.If0Dir = "testif0"
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	SetEnvVariable("GC_AUTO", "No")
 	SetEnvVariable("GC_PERIOD", "0")
 	GarbageCollection()
-	f, _ := ioutil.ReadDir(snapshotsDir)
+	f, _ := ioutil.ReadDir(common.SnapshotsDir)
 	assert.NotEqual(t, 0, len(f))
 }
 
 func TestGarbageCollection(t *testing.T) {
-	if0Dir = "testif0"
-	snapshotsDir = filepath.Join(if0Dir, ".snapshots")
+	common.If0Dir = "testif0"
+	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	SetEnvVariable("GC_AUTO", "Yes")
 	SetEnvVariable("GC_PERIOD", "0")
 	GarbageCollection()
-	f, _ := ioutil.ReadDir(snapshotsDir)
+	f, _ := ioutil.ReadDir(common.SnapshotsDir)
 	assert.Equal(t, 0, len(f))
+	_ = os.RemoveAll("testif0")
 }
 
 func TestParseGcAutoStr(t *testing.T) {

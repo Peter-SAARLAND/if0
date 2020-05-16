@@ -15,8 +15,13 @@ limitations under the License.
 */
 package main
 
-import "if0/commands/cmd"
+import (
+	"if0/commands/cmd"
+)
+
+var Version string
 
 func main() {
+	cmd.Version = Version
 	cmd.Execute()
 }

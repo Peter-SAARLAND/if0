@@ -16,7 +16,7 @@ limitations under the License.
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
 	"github.com/spf13/cobra"
 	"if0/config"
 	"os"
@@ -62,7 +62,7 @@ var (
 		It has features to add or update configuration for if0 or for zero-clusters`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if set != nil {
-				log.Println("Reading environment variables from flag --set")
+				fmt.Println("Reading environment variables from flag --set")
 				loadConfigFromFlags(set)
 			}
 
@@ -71,31 +71,35 @@ var (
 			if merge {
 				err := config.MergeConfigFiles(src, dst, zero)
 				if err != nil {
-					log.Errorln(err)
+					fmt.Println("Error: Merging config files - ", err)
 					return
 				}
 			}
 
 			// checking if a configuration file has been provided in the command
 			if add != "" {
-				log.Debugln("Updating configuration")
+				fmt.Println("Updating configuration")
 				loadConfigFromFile(add)
 			}
 
 			// printing current running configuration to the stdout.
-			log.Println("Current Running Configuration")
+			fmt.Println("Current Running Configuration")
 			config.PrintCurrentRunningConfig()
 
 			// automatic garbage collection
 			config.GarbageCollection()
 
 			//
+			//if sync {
+			//	err := config.RepoSync()
+			//	if err != nil {
+			//		fmt.Errorln("Error while syncing with remote repo: ", err)
+			//		return
+			//	}
+			//}
 			if sync {
-				err := config.RepoSync()
-				if err != nil {
-					log.Errorln("Error while syncing with remote repo: ", err)
-					return
-				}
+				fmt.Println("if0 config --sync functionality temporarily disabled.")
+				return
 			}
 		},
 	}
@@ -115,20 +119,20 @@ func loadConfigFromFile(configFile string) {
 	// validating the configuration file
 	isValid, err := config.IsConfigFileValid(configFile, zero)
 	if !isValid {
-		log.Errorln("Terminating config update: ", err)
+		fmt.Println("Error: Terminating config update: ", err)
 		return
 	}
 
 	// checking if the provided configuration file is present.
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		log.Errorf("The provided configuration file %s is not found.", configFile)
+		fmt.Printf("Error: The provided configuration file %s is not found. \n", configFile)
 		return
 	}
 
 	// adding/updating the config file
 	err = config.AddConfigFile(configFile, zero)
 	if err != nil {
-		log.Errorln(err)
+		fmt.Println("Error: Adding config file - ", err)
 	}
 }
 
