@@ -3,6 +3,7 @@ package sync
 import (
 	"errors"
 	"fmt"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
@@ -110,4 +111,26 @@ func (p *Auth) readPassword() ([]byte, error) {
 		return nil, err
 	}
 	return secret, nil
+}
+
+func getUserConfig() (string, string) {
+	var name, email string
+	cfg := config.NewConfig()
+	gitConfig := filepath.Join(common.RootPath, ".gitconfig")
+	b, err := ioutil.ReadFile(gitConfig)
+	if err != nil {
+		fmt.Println("Error: Reading .gitconfig - ", err)
+		return name, email
+	}
+	err = cfg.Unmarshal(b)
+	if err != nil {
+		fmt.Println("Error: Unmarshalling .gitconfig - ", err)
+		return name, email
+	}
+	for _, ss := range cfg.Raw.Sections {
+		email = ss.Options.Get("email")
+		name = ss.Options.Get("name")
+		return name, email
+	}
+	return name, email
 }
