@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 )
 
@@ -31,6 +32,28 @@ func AddEnv(repoUrl string) error {
 
 	_, err = clone(repoUrl, auth)
 	if err != nil{
+		if err.Error() == "remote repository is empty"{
+			err = cloneEmptyRepo(repoUrl)
+			if err != nil {
+				return err
+			}
+		}
+		return err
+	}
+	return nil
+}
+
+func cloneEmptyRepo(remoteStorage string) error {
+	syncObj := sync.Sync{}
+	dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
+	dirPath := filepath.Join(common.EnvDir, dirName)
+	r, err := syncObj.GitInit(dirPath)
+	if err != nil {
+		return err
+	}
+	// git remote add <repo>
+	err = syncObj.AddRemote(remoteStorage, r)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -70,6 +93,10 @@ func readAllEnvFiles(dirPath string) map[string]interface{}{
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		fmt.Printf("Error: Reading environment directory %s - %s\n", dirPath, err)
+		return nil
+	}
+	if len(files) < 1 {
+		fmt.Println("Info: No .env files found")
 		return nil
 	}
 	allConfig := make(map[string]interface{})
