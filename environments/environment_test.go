@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"if0/common"
 	"if0/common/sync"
+	"if0/config"
 	"os"
 	"path/filepath"
 	"testing"
@@ -68,4 +69,19 @@ func TestSyncEnv(t *testing.T) {
 	}
 	err := SyncEnv("sample-repo")
 	assert.Nil(t, err)
+}
+
+func TestLoadEnvNoFiles(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	os.Remove(filepath.Join("testdata", "sample-repo", "if0.env"))
+	err := loadEnv(common.EnvDir)
+	assert.EqualError(t, err, "no .env files found")
+}
+
+func TestLoadEnv(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	f, _ := os.OpenFile(filepath.Join("testdata", "sample-repo", "if0.env"), os.O_CREATE|os.O_RDWR, 0644)
+	_, _ = f.Write([]byte("IF0_ENVIRONMENT=sample-repo"))
+	_ = loadEnv(common.EnvDir)
+	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
 }

@@ -27,7 +27,7 @@ import (
 const (
 	addArg  = "add"
 	syncArg = "sync"
-	loadArg = "load"
+	planArg = "plan"
 )
 
 // environmentCmd represents the environment command
@@ -72,17 +72,16 @@ var environmentCmd = &cobra.Command{
 		}
 
 		// loading Environment
-		if args[0] == loadArg {
+		if args[0] == planArg {
 			var envDir string
 			if len(args) < 2 {
 				envDir, _ = os.Getwd()
 			} else {
 				envDir = filepath.Join(common.EnvDir, args[1])
 			}
-			fmt.Printf("Loading configuration from %s \n", envDir)
-			err := environments.LoadEnv(envDir)
+			err := environments.PlanEnv(envDir)
 			if err != nil {
-				fmt.Println("Error: Loading repo - ", err)
+				fmt.Println("Error: Planning env - ", err)
 				return
 			}
 		}

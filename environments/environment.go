@@ -7,17 +7,17 @@ import (
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
+	"if0/environments/dockercmd"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 var (
-	syncObj = sync.Sync{}
-	clone = syncObj.Clone
-	getAuth = sync.GetSyncAuth
+	syncObj  = sync.Sync{}
+	clone    = syncObj.Clone
+	getAuth  = sync.GetSyncAuth
 	repoSync = config.GitRepoSync
 )
 
@@ -31,8 +31,8 @@ func AddEnv(repoUrl string) error {
 	}
 
 	_, err = clone(repoUrl, auth)
-	if err != nil{
-		if err.Error() == "remote repository is empty"{
+	if err != nil {
+		if err.Error() == "remote repository is empty" {
 			err = cloneEmptyRepo(repoUrl)
 			if err != nil {
 				return err
@@ -63,7 +63,7 @@ func SyncEnv(repoName string) error {
 	repoPath := filepath.Join(common.EnvDir, repoName)
 	// check if repo exists.
 	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		fmt.Printf("The repository %s could not be found at %s. " +
+		fmt.Printf("The repository %s could not be found at %s. "+
 			"Add the repository before performing sync operation \n", repoName, common.EnvDir)
 		return errors.New("repository not found")
 	}
@@ -76,28 +76,36 @@ func SyncEnv(repoName string) error {
 	return nil
 }
 
-func LoadEnv(envDir string) error {
-	fmt.Println("Reading .env files from", envDir)
-	envConfig := readAllEnvFiles(envDir)
-	for k, v := range envConfig {
-		config.SetEnvVariable(k, v.(string))
-	}
-	err := syscall.Exec(os.Getenv("SHELL"), []string{os.Getenv("SHELL")}, syscall.Environ())
+func PlanEnv(envDir string) error {
+	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	err := dockercmd.MakePlan(envName)
 	if err != nil {
-		fmt.Println("Error: Opening shell - ", err)
+		return err
 	}
 	return nil
 }
 
-func readAllEnvFiles(dirPath string) map[string]interface{}{
+func loadEnv(envDir string) error {
+	fmt.Println("Reading .env files from", envDir)
+	envConfig, err := readAllEnvFiles(envDir)
+	if err != nil {
+		return err
+	}
+	for k, v := range envConfig {
+		config.SetEnvVariable(k, v.(string))
+	}
+	return nil
+}
+
+func readAllEnvFiles(dirPath string) (map[string]interface{}, error) {
 	files, err := ioutil.ReadDir(dirPath)
 	if err != nil {
 		fmt.Printf("Error: Reading environment directory %s - %s\n", dirPath, err)
-		return nil
+		return nil, err
 	}
 	if len(files) < 1 {
 		fmt.Println("Info: No .env files found")
-		return nil
+		return nil, errors.New("no .env files found")
 	}
 	allConfig := make(map[string]interface{})
 	for _, file := range files {
@@ -115,5 +123,5 @@ func readAllEnvFiles(dirPath string) map[string]interface{}{
 			}
 		}
 	}
-	return allConfig
+	return allConfig, nil
 }
