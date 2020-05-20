@@ -7,7 +7,6 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
 	"if0/common"
 	"io"
 	"os"
@@ -76,7 +75,7 @@ func MakePlan(envName string) error {
 		fmt.Println("Error: ContainerLogs - ", err)
 		return err
 	}
-	_, _ = stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+	_, _ = io.Copy(os.Stdout, out)
 
 	err = dockerClient.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
