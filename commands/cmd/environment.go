@@ -28,6 +28,8 @@ const (
 	addArg  = "add"
 	syncArg = "sync"
 	planArg = "plan"
+	provisionArg = "provision"
+	zeroArg = "zero"
 )
 
 // environmentCmd represents the environment command
@@ -71,15 +73,30 @@ var environmentCmd = &cobra.Command{
 			}
 		}
 
-		// loading Environment
+		// planning Environment
 		if args[0] == planArg {
-			var envDir string
-			if len(args) < 2 {
-				envDir, _ = os.Getwd()
-			} else {
-				envDir = filepath.Join(common.EnvDir, args[1])
-			}
+			envDir := getEnvDir(args)
 			err := environments.PlanEnv(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// provisioning environment
+		if args[0] == provisionArg {
+			envDir := getEnvDir(args)
+			err := environments.ProvisionEnv(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// creating zero infrastructure
+		if args[0] == zeroArg {
+			envDir := getEnvDir(args)
+			err := environments.CreateZeroInfra(envDir)
 			if err != nil {
 				fmt.Println("Error: Planning env - ", err)
 				return
@@ -88,7 +105,16 @@ var environmentCmd = &cobra.Command{
 	},
 }
 
+func getEnvDir(args []string) string {
+	var envDir string
+	if len(args) < 2 {
+		envDir, _ = os.Getwd()
+	} else {
+		envDir = filepath.Join(common.EnvDir, args[1])
+	}
+	return envDir
+}
+
 func init() {
 	rootCmd.AddCommand(environmentCmd)
-	//environmentCmd.Flags().StringVar(&add, "add", "", "add a new environments config git repository")
 }

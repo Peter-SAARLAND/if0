@@ -34,3 +34,27 @@ func MakePlan(envName string) error {
 	}
 	return nil
 }
+
+// This function used to provision the platform
+func MakeZero(envName string) error {
+	//binding mounts
+	mounts := []mount.Mount{
+		{Type: mount.TypeBind,
+			Source: getMountSrcPath(envName),
+			Target: mountTargetPath}}
+	hostConfig := &container.HostConfig{Mounts: mounts}
+
+	containerConfig := &container.Config{
+		Image: dash1Image,
+		Cmd:   []string{"make", "zero"},
+		Tty:   true,
+		Env:   []string{"IF0_ENVIRONMENT=" + envName},
+	}
+	containerName := "dash1-" + envName
+	err := dockerRun(containerConfig, hostConfig, containerName, dash1Image)
+	if err != nil {
+		fmt.Println("Error: MakeZero - ", err)
+		return err
+	}
+	return nil
+}
