@@ -40,6 +40,14 @@ func AddEnv(repoUrl string) error {
 		}
 		return err
 	}
+
+	// check if the necessary files are present in the environment
+	// if not, add them with basic information
+	//envName := strings.Split(filepath.Base(repoUrl), ".")[0]
+	//err = envInit(envName)
+	//if err != nil {
+	//	return err
+	//}
 	return nil
 }
 
@@ -56,6 +64,11 @@ func cloneEmptyRepo(remoteStorage string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func envInit(envName string) error {
+	//envPath := filepath.Join(common.EnvDir, envName)
 	return nil
 }
 
@@ -84,6 +97,25 @@ func PlanEnv(envDir string) error {
 	}
 	return nil
 }
+
+func ProvisionEnv(envDir string) error {
+	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	err := dockercmd.MakeProvision(envName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateZeroInfra(envDir string) error {
+	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	err := dockercmd.MakeZero(envName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 
 func loadEnv(envDir string) error {
 	fmt.Println("Reading .env files from", envDir)

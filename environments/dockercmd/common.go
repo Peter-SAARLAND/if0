@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"if0/common"
 	"io"
@@ -14,13 +13,22 @@ import (
 )
 
 const (
-	dash1Image = "registry.gitlab.com/peter.saarland/dash1"
+	dash1Image      = "registry.gitlab.com/peter.saarland/dash1"
+	zeroImage       = "registry.gitlab.com/peter.saarland/zero"
+	mountTargetPath = "/root/.if0/.environments/zero"
+	gitConfigTargetPath = "/root/.gitconfig"
 )
 
-// This function is used to start a dash1 container, and run `make plan` inside the container.
-// In dash1, make plan initializes the necessary Terraform provider modules for
-// the Environment 'envName' and then creates a plan in ~/.if0/.environments/$NAME/dash1.plan`
-func MakePlan(envName string) error {
+var (
+	gitConfigSrc = filepath.Join(common.RootPath, ".gitconfig")
+)
+
+func getMountSrcPath(envName string) string {
+	return filepath.Join(common.EnvDir, envName)
+}
+
+func dockerRun(containerConfig *container.Config, hostConfig *container.HostConfig,
+	containerName string, image string) error {
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -28,28 +36,15 @@ func MakePlan(envName string) error {
 		return err
 	}
 
-	status, err := dockerClient.ImagePull(ctx, dash1Image, types.ImagePullOptions{})
+	status, err := dockerClient.ImagePull(ctx, image, types.ImagePullOptions{})
 	if err != nil {
 		fmt.Println("Error: ImagePull - ", err)
 		return err
 	}
 	_, _ = io.Copy(os.Stdout, status)
 
-	//binding mounts
-	mounts := []mount.Mount{
-		{Type: mount.TypeBind,
-			Source: filepath.Join(common.RootPath, ".if0", ".environments", "if0-config"),
-			Target: "/root/.if0/.environments/zero"},
-		{Type: mount.TypeBind,
-			Source: filepath.Join(common.RootPath, ".gitconfig"),
-			Target: "/root/.gitconfig"}}
-	hostConfig := &container.HostConfig{Mounts: mounts}
-
-	resp, err := dockerClient.ContainerCreate(ctx, &container.Config{
-		Image: dash1Image,
-		Cmd:   []string{"make", "plan"},
-		Tty:   true,
-	}, hostConfig, nil, "dash1-"+envName)
+	resp, err := dockerClient.ContainerCreate(ctx, containerConfig,
+		hostConfig, nil, containerName)
 	if err != nil {
 		fmt.Println("Error: ContainerCreate - ", err)
 		return err
