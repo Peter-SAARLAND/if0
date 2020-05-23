@@ -60,13 +60,8 @@ var environmentCmd = &cobra.Command{
 
 		// syncing
 		if args[0] == syncArg {
-			if len(args) < 2 {
-				fmt.Println("Please provide valid arguments.")
-				fmt.Println("example command: if0 environment sync if0-config")
-				return
-			}
-			repoName := args[1]
-			err := environments.SyncEnv(repoName)
+			envDir := getEnvDir(args)
+			err := environments.SyncEnv(envDir)
 			if err != nil {
 				fmt.Println("Error: Syncing repo - ", err)
 				return

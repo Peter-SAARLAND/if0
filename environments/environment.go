@@ -72,16 +72,15 @@ func envInit(envName string) error {
 	return nil
 }
 
-func SyncEnv(repoName string) error {
-	repoPath := filepath.Join(common.EnvDir, repoName)
+func SyncEnv(envDir string) error {
 	// check if repo exists.
-	if _, err := os.Stat(repoPath); os.IsNotExist(err) {
-		fmt.Printf("The repository %s could not be found at %s. "+
-			"Add the repository before performing sync operation \n", repoName, common.EnvDir)
+	if _, err := os.Stat(envDir); os.IsNotExist(err) {
+		fmt.Printf("The repository could not be found at %s. "+
+			"Please add the repository before performing sync operation \n", common.EnvDir)
 		return errors.New("repository not found")
 	}
 
-	err := repoSync(&syncObj, repoPath, false)
+	err := repoSync(&syncObj, envDir, false)
 	if err != nil {
 		fmt.Println("Error: Syncing external repo - ", err)
 		return err

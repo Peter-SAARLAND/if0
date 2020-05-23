@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	dash1Image      = "registry.gitlab.com/peter.saarland/dash1"
-	zeroImage       = "registry.gitlab.com/peter.saarland/zero"
-	mountTargetPath = "/root/.if0/.environments/zero"
+	dash1Image          = "registry.gitlab.com/peter.saarland/dash1"
+	zeroImage           = "registry.gitlab.com/peter.saarland/zero"
+	mountTargetPath     = "/root/.if0/.environments/zero"
 	gitConfigTargetPath = "/root/.gitconfig"
 )
 
@@ -46,7 +46,8 @@ func getMountSrcPath(envName string) (string, error) {
 func getGitConfigMount(mounts []mount.Mount) []mount.Mount {
 	gitConfigPath := getGitConfigPath()
 	if gitConfigPath != "" {
-		mounts = append(mounts, mount.Mount{Source: gitConfigPath, Target: gitConfigTargetPath})
+		mounts = append(mounts, mount.Mount{Type: mount.TypeBind,
+			Source: gitConfigPath, Target: gitConfigTargetPath})
 	}
 	return mounts
 }
@@ -73,8 +74,11 @@ func dockerRun(containerConfig *container.Config, hostConfig *container.HostConf
 		fmt.Println("Error: ImagePull - ", err)
 		return err
 	}
-	_, _ = io.Copy(os.Stdout, status)
-
+	// setting VERBOSITY=1
+	if common.Verbose {
+		_, _ = io.Copy(os.Stdout, status)
+	}
+	containerConfig.Env = append(containerConfig.Env, "VERBOSITY=1")
 	resp, err := dockerClient.ContainerCreate(ctx, containerConfig,
 		hostConfig, nil, containerName)
 	if err != nil {
