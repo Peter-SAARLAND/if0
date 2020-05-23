@@ -2,9 +2,11 @@ package dockercmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"if0/common"
 	"io"
@@ -19,12 +21,42 @@ const (
 	gitConfigTargetPath = "/root/.gitconfig"
 )
 
-var (
-	gitConfigSrc = filepath.Join(common.RootPath, ".gitconfig")
-)
+func addMounts(envName string) []mount.Mount {
+	var mounts []mount.Mount
+	mountPath, err := getMountSrcPath(envName)
+	if err != nil {
+		return nil
+	}
+	mounts = append(mounts, mount.Mount{Type: mount.TypeBind,
+		Source: mountPath,
+		Target: mountTargetPath})
+	// append gitconfig mount, if present.
+	mounts = getGitConfigMount(mounts)
+	return mounts
+}
 
-func getMountSrcPath(envName string) string {
-	return filepath.Join(common.EnvDir, envName)
+func getMountSrcPath(envName string) (string, error) {
+	envDir := filepath.Join(common.EnvDir, envName)
+	if _, err := os.Stat(envDir); os.IsNotExist(err) {
+		return "", errors.New("missing mount")
+	}
+	return filepath.Join(common.EnvDir, envName), nil
+}
+
+func getGitConfigMount(mounts []mount.Mount) []mount.Mount {
+	gitConfigPath := getGitConfigPath()
+	if gitConfigPath != "" {
+		mounts = append(mounts, mount.Mount{Source: gitConfigPath, Target: gitConfigTargetPath})
+	}
+	return mounts
+}
+
+func getGitConfigPath() string {
+	gitConfigSrc := filepath.Join(common.RootPath, ".gitconfig")
+	if _, err := os.Stat(gitConfigSrc); os.IsNotExist(err) {
+		return ""
+	}
+	return gitConfigSrc
 }
 
 func dockerRun(containerConfig *container.Config, hostConfig *container.HostConfig,

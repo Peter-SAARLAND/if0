@@ -1,9 +1,9 @@
 package dockercmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/mount"
 )
 
 // This function is used to start a dash1 container, and run `make plan` inside the container.
@@ -11,13 +11,12 @@ import (
 // the Environment 'envName' and then creates a plan in ~/.if0/.environments/$NAME/dash1.plan`
 func MakePlan(envName string) error {
 	//binding mounts
-	mounts := []mount.Mount{
-		{Type: mount.TypeBind,
-			Source: getMountSrcPath(envName),
-			Target: mountTargetPath},
-		{Type: mount.TypeBind,
-			Source: gitConfigSrc,
-			Target: gitConfigTargetPath}}
+	mounts := addMounts(envName)
+	if mounts == nil {
+		errString := fmt.Sprintf("environment %s doesn't exist. "+
+			"Do `if0 environment add %s` to add it", envName, envName)
+		return errors.New(errString)
+	}
 	hostConfig := &container.HostConfig{Mounts: mounts}
 
 	containerConfig := &container.Config{
@@ -38,10 +37,12 @@ func MakePlan(envName string) error {
 // This function used to provision the platform
 func MakeZero(envName string) error {
 	//binding mounts
-	mounts := []mount.Mount{
-		{Type: mount.TypeBind,
-			Source: getMountSrcPath(envName),
-			Target: mountTargetPath}}
+	mounts := addMounts(envName)
+	if mounts == nil {
+		errString := fmt.Sprintf("environment %s doesn't exist. "+
+			"Do `if0 environment add %s` to add it", envName, envName)
+		return errors.New(errString)
+	}
 	hostConfig := &container.HostConfig{Mounts: mounts}
 
 	containerConfig := &container.Config{

@@ -1,18 +1,20 @@
 package dockercmd
 
 import (
-"fmt"
-"github.com/docker/docker/api/types/container"
-"github.com/docker/docker/api/types/mount"
+	"errors"
+	"fmt"
+	"github.com/docker/docker/api/types/container"
 )
 
 // This function used to provision the platform
 func MakeProvision(envName string) error {
 	//binding mounts
-	mounts := []mount.Mount{
-		{Type: mount.TypeBind,
-			Source: getMountSrcPath(envName),
-			Target: mountTargetPath}}
+	mounts := addMounts(envName)
+	if mounts == nil {
+		errString := fmt.Sprintf("environment %s doesn't exist. "+
+			"Do `if0 environment add %s` to add it", envName, envName)
+		return errors.New(errString)
+	}
 	hostConfig := &container.HostConfig{Mounts: mounts}
 
 	containerConfig := &container.Config{
