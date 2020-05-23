@@ -27,7 +27,9 @@ import (
 const (
 	addArg  = "add"
 	syncArg = "sync"
-	loadArg = "load"
+	planArg = "plan"
+	provisionArg = "provision"
+	zeroArg = "zero"
 )
 
 // environmentCmd represents the environment command
@@ -71,25 +73,48 @@ var environmentCmd = &cobra.Command{
 			}
 		}
 
-		// loading Environment
-		if args[0] == loadArg {
-			var envDir string
-			if len(args) < 2 {
-				envDir, _ = os.Getwd()
-			} else {
-				envDir = filepath.Join(common.EnvDir, args[1])
-			}
-			fmt.Printf("Loading configuration from %s \n", envDir)
-			err := environments.LoadEnv(envDir)
+		// planning Environment
+		if args[0] == planArg {
+			envDir := getEnvDir(args)
+			err := environments.PlanEnv(envDir)
 			if err != nil {
-				fmt.Println("Error: Loading repo - ", err)
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// provisioning environment
+		if args[0] == provisionArg {
+			envDir := getEnvDir(args)
+			err := environments.ProvisionEnv(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// creating zero infrastructure
+		if args[0] == zeroArg {
+			envDir := getEnvDir(args)
+			err := environments.CreateZeroInfra(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
 				return
 			}
 		}
 	},
 }
 
+func getEnvDir(args []string) string {
+	var envDir string
+	if len(args) < 2 {
+		envDir, _ = os.Getwd()
+	} else {
+		envDir = filepath.Join(common.EnvDir, args[1])
+	}
+	return envDir
+}
+
 func init() {
 	rootCmd.AddCommand(environmentCmd)
-	//environmentCmd.Flags().StringVar(&add, "add", "", "add a new environments config git repository")
 }
