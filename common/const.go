@@ -17,3 +17,8 @@ var (
 	SnapshotsDir = filepath.Join(If0Dir, ".snapshots")
 	If0Default   = filepath.Join(If0Dir, "if0.env")
 )
+
+// common flag
+var (
+	Verbose bool
+)

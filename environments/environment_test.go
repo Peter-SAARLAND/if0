@@ -56,7 +56,7 @@ func TestSyncEnvError(t *testing.T) {
 	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		return errors.New("test-repo-sync-error")
 	}
-	err := SyncEnv("sample-repo")
+	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
 	assert.EqualError(t, err, "test-repo-sync-error")
 }
 
@@ -67,7 +67,7 @@ func TestSyncEnv(t *testing.T) {
 	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		return nil
 	}
-	err := SyncEnv("sample-repo")
+	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
 	assert.Nil(t, err)
 }
 
