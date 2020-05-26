@@ -30,10 +30,10 @@ func AddEnv(repoUrl string) error {
 		return err
 	}
 
-	_, err = clone(repoUrl, auth)
+	r, err := clone(repoUrl, auth)
 	if err != nil {
 		if err.Error() == "remote repository is empty" {
-			err = cloneEmptyRepo(repoUrl)
+			r, err = cloneEmptyRepo(repoUrl)
 			if err != nil {
 				return err
 			}
@@ -45,7 +45,7 @@ func AddEnv(repoUrl string) error {
 	//check if the necessary files are present in the environment
 	//if not, add them with basic information
 	envName := strings.Split(filepath.Base(repoUrl), ".")[0]
-	envInit(envName)
+	envInit(r, auth, envName)
 	return nil
 }
 
