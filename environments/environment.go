@@ -41,34 +41,10 @@ func AddEnv(repoUrl string) error {
 		return err
 	}
 
-	// check if the necessary files are present in the environment
-	// if not, add them with basic information
-	//envName := strings.Split(filepath.Base(repoUrl), ".")[0]
-	//err = envInit(envName)
-	//if err != nil {
-	//	return err
-	//}
-	return nil
-}
-
-func cloneEmptyRepo(remoteStorage string) error {
-	syncObj := sync.Sync{}
-	dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
-	dirPath := filepath.Join(common.EnvDir, dirName)
-	r, err := syncObj.GitInit(dirPath)
-	if err != nil {
-		return err
-	}
-	// git remote add <repo>
-	err = syncObj.AddRemote(remoteStorage, r)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func envInit(envName string) error {
-	//envPath := filepath.Join(common.EnvDir, envName)
+	//check if the necessary files are present in the environment
+	//if not, add them with basic information
+	envName := strings.Split(filepath.Base(repoUrl), ".")[0]
+	envInit(envName)
 	return nil
 }
 
