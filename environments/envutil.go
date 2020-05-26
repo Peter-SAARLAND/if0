@@ -49,6 +49,11 @@ func envInit(envName string) {
 			fmt.Println("Error: Generating SSH Key pair - ", err)
 		}
 	}
+	// Pushing the newly added changes to the remote repository
+	err := SyncEnv(envName)
+	if err != nil {
+		fmt.Println("Error: env init sync repo - ", err)
+	}
 }
 
 func createFile(fileName string) *os.File {
