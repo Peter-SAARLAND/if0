@@ -101,7 +101,8 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 }
 
 func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, common.EnvDir)
+	repoName := strings.Split(filepath.Base(repoUrl), ".")[0]
+	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, filepath.Join(common.EnvDir, repoName))
 	cloneOptions := &git.CloneOptions{
 		URL:      repoUrl,
 		Auth:     auth,
