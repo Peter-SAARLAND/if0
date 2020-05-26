@@ -6,8 +6,8 @@ ifeq ($config,)
 	export $(shell sed 's/=.*//' $(config))
 endif
 
-ifeq ("$(wildcard $(VERSION.txt))","")
-	VERSION := $(shell cat VERSION.txt)
+ifeq ("$(wildcard $('VERSION.txt'))","")
+	VERSION := $(shell git rev-list -1 HEAD)
 else
 	VERSION := $(shell git rev-list -1 HEAD)
 endif
@@ -44,7 +44,6 @@ build-nc: ## Build the container without caching
 
 run: ## Run container on port configured in `config.env`
 	docker run -i -t --rm --env-file=./config.env --name="$(APP_NAME)" $(APP_NAME)
-
 
 up: build run ## Run container on port configured in `config.env` (Alias to run)
 
