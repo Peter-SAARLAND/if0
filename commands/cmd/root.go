@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"if0/common"
 	"os"
 	"path/filepath"
 
@@ -53,7 +54,7 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	//rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.if0.env)")
+	rootCmd.PersistentFlags().BoolVarP(&common.Verbose, "verbose", "v", false, "verbose output")
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -76,7 +77,5 @@ func initConfig() {
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Println("Using config file:", viper.ConfigFileUsed())
-	}
+	_ = viper.ReadInConfig()
 }
