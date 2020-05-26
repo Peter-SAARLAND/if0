@@ -37,8 +37,9 @@ func AddEnv(repoUrl string) error {
 			if err != nil {
 				return err
 			}
+		} else {
+			return err
 		}
-		return err
 	}
 
 	//check if the necessary files are present in the environment
