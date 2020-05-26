@@ -40,6 +40,9 @@ func TestAddEnvClone(t *testing.T) {
 		r := &git.Repository{}
 		return r, nil
 	}
+	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
+		return nil
+	}
 	err := AddEnv("sample_repo")
 	assert.Nil(t, err)
 }
@@ -88,7 +91,10 @@ func TestLoadEnv(t *testing.T) {
 
 func TestEnvInit(t *testing.T) {
 	common.EnvDir = "testdata"
-	envInit("sample-repo")
+	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
+		return nil
+	}
+	envInit(nil, nil, "sample-repo")
 	assert.DirExists(t, filepath.Join("testdata", "sample-repo", ".ssh"))
 	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "dash1.env"))
 	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "zero.env"))
