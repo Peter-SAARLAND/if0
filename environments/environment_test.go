@@ -85,3 +85,16 @@ func TestLoadEnv(t *testing.T) {
 	_ = loadEnv(common.EnvDir)
 	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
 }
+
+func TestEnvInit(t *testing.T) {
+	common.EnvDir = "testdata"
+	envInit("sample-repo")
+	assert.DirExists(t, filepath.Join("testdata", "sample-repo", ".ssh"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "dash1.env"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "zero.env"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
+	os.RemoveAll(filepath.Join("testdata", "sample-repo", ".ssh"))
+	os.Remove(filepath.Join("testdata", "sample-repo", "dash1.env"))
+	os.Remove(filepath.Join("testdata", "sample-repo", "zero.env"))
+	os.Remove(filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
+}
