@@ -6,6 +6,8 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"golang.org/x/crypto/ssh"
 	"if0/common"
 	"if0/common/sync"
@@ -15,24 +17,28 @@ import (
 	"strings"
 )
 
-func cloneEmptyRepo(remoteStorage string) error {
+var (
+	pushEnvInitChanges = pushInitChanges
+)
+
+func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
 	syncObj := sync.Sync{}
 	dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
 	dirPath := filepath.Join(common.EnvDir, dirName)
 	r, err := syncObj.GitInit(dirPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// git remote add <repo>
 	err = syncObj.AddRemote(remoteStorage, r)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return r, nil
 }
 
 // This function checks if the environment directory contains necessary files, if not, creates them.
-func envInit(envName string) {
+func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error {
 	envPath := filepath.Join(common.EnvDir, envName)
 	createFile(filepath.Join(envPath, "zero.env"))
 	createFile(filepath.Join(envPath, "dash1.env"))
@@ -47,17 +53,41 @@ func envInit(envName string) {
 		err := generateSSHKeyPair(sshDir)
 		if err != nil {
 			fmt.Println("Error: Generating SSH Key pair - ", err)
+			return err
 		}
 	}
 	// Pushing the newly added changes to the remote repository
-	err := SyncEnv(envName)
-	if err != nil {
-		fmt.Println("Error: env init sync repo - ", err)
+	err := pushEnvInitChanges(r, auth)
+	return err
+}
+
+func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
+	fmt.Println("Syncing environment init file changes")
+	w, _ := syncObj.GetWorktree(r)
+	status, _ := syncObj.Status(w)
+	if len(status) > 0 {
+		for file, _ := range status {
+			_ = syncObj.AddFile(w, file)
+		}
+		// git commit
+		err := syncObj.Commit(w)
+		if err != nil {
+			fmt.Println("Error: Committing changes - ", err)
+			return err
+		}
+		// git push
+		err = syncObj.Push(auth, r)
+		if err != nil {
+			fmt.Println("Error: Pushing changes - ", err)
+			return err
+		}
 	}
+	return nil
 }
 
 func createFile(fileName string) *os.File {
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+		fmt.Println("Creating file", fileName)
 		f, _ := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
 		return f
 	}
