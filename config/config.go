@@ -47,16 +47,19 @@ func PrintCurrentRunningConfig() {
 			fmt.Println("Error: Creating a new config file - ", err)
 			return
 		}
-		_, err = f.WriteString("IFO_VERSION=1")
+		_, err = f.WriteString("IFO_VERSION=1\n")
 		if err != nil {
 			fmt.Println("Error: Writing to the new config file - ", err)
 			return
 		}
 	}
 	readConfigFile(common.If0Default)
-	allConfig := viper.AllSettings()
-	for key, val := range allConfig {
-		fmt.Println(key, ":", val)
+	if GetEnvVariable("SHIPMATE_WORKFLOW_URL") == "" {
+		f, _ := os.OpenFile(common.If0Default, os.O_APPEND, 0644)
+		_, _ = f.WriteString("SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
+	}
+	for key, val := range viper.AllSettings() {
+		fmt.Println(strings.ToUpper(key), ":", val)
 	}
 }
 
