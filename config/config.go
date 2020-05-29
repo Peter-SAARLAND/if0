@@ -128,7 +128,7 @@ func IsConfigFileValid(configFile string, zero bool) (bool, error) {
 	if err != nil {
 		fmt.Println("Error: Reading config file: ", err)
 	}
-	if0Version := viper.IsSet(common.IFO_VERSION)
+	if0Version := viper.IsSet(common.IF0_VERSION)
 	zeroVersion := viper.IsSet(common.ZERO_VERSION)
 
 	if !if0Version && !zeroVersion {
