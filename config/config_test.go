@@ -17,14 +17,15 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	_ = os.RemoveAll(common.If0Dir)
 	out := readStdOutPrintCurrentRunningConfig()
-	assert.Contains(t, string(out), "ifo_version : 1\n")
+	assert.Contains(t, string(out), "IFO_VERSION : 1\n")
 }
 
 func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	out := readStdOutPrintCurrentRunningConfig()
-	assert.Equal(t, "ifo_version : 1\n", string(out))
+	assert.Contains(t, string(out), "IFO_VERSION : 1\n")
+	assert.Contains(t, string(out), "SHIPMATE_WORKFLOW_URL")
 }
 
 func TestAddConfigFileReplace(t *testing.T) {
