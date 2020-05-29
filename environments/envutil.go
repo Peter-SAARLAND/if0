@@ -54,7 +54,7 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 	files, direrr := ioutil.ReadDir(sshDir)
 	// .ssh dir not present or present but no keys
 	if _, err := os.Stat(sshDir); os.IsNotExist(err) || (direrr == nil && len(files) < 2) {
-		_ = os.Mkdir(sshDir, os.ModeDir)
+		_ = os.Mkdir(sshDir, 0700)
 		err := generateSSHKeyPair(sshDir)
 		if err != nil {
 			fmt.Println("Error: Generating SSH Key pair - ", err)
@@ -115,12 +115,12 @@ func generateSSHKeyPair(sshDir string) error {
 
 	privateKeyBytes := encodePrivateKeyToPEM(privateKey)
 
-	err = writeKeyToFile(privateKeyBytes, privateKeyPath)
+	err = writeKeyToFile(privateKeyBytes, privateKeyPath, 0600)
 	if err != nil {
 		return err
 	}
 
-	err = writeKeyToFile([]byte(publicKeyBytes), publicKeyPath)
+	err = writeKeyToFile([]byte(publicKeyBytes), publicKeyPath, 0644)
 	if err != nil {
 		return err
 	}
@@ -159,8 +159,8 @@ func encodePrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
 	return privatePEM
 }
 
-func writeKeyToFile(keyBytes []byte, file string) error {
-	err := ioutil.WriteFile(file, keyBytes, 0600)
+func writeKeyToFile(keyBytes []byte, file string, perm os.FileMode) error {
+	err := ioutil.WriteFile(file, keyBytes, perm)
 	if err != nil {
 		return err
 	}
