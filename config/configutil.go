@@ -33,9 +33,9 @@ func getDstFileForMerge(src string, dst string, zero bool) string {
 // mergeConfigFiles combines configuration from source .env file with configuration in the destination .env file
 // For config keys that are already present, the values are updated from source .env file
 func mergeConfigFiles(srcConfigFile, dstConfigFile string) {
-	readConfigFile(dstConfigFile)
+	ReadConfigFile(dstConfigFile)
 	currentConfigMap := viper.AllSettings()
-	readConfigFile(srcConfigFile)
+	ReadConfigFile(srcConfigFile)
 	newConfigMap := viper.AllSettings()
 	for k, v := range newConfigMap {
 		currentConfigMap[k] = v
@@ -80,8 +80,8 @@ func getRunningConfigFile(srcConfigFile string, zero bool) string {
 	return runningConfigFile
 }
 
-// readConfigFile reads the provided config file
-func readConfigFile(configFile string) {
+// ReadConfigFile reads the provided config file
+func ReadConfigFile(configFile string) {
 	viper.SetConfigFile(configFile)
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -92,7 +92,7 @@ func readConfigFile(configFile string) {
 
 // createConfigFile creates a new running config file from the provided config file (src)
 func createConfigFile(srcConfigFile, runningConfigFile string) error {
-	readConfigFile(srcConfigFile)
+	ReadConfigFile(srcConfigFile)
 	err := viper.WriteConfigAs(runningConfigFile)
 	if err != nil {
 		fmt.Println("Error: Failed to add/update the config file - ", err)
@@ -121,7 +121,7 @@ func backupToSnapshots(fileName string) error {
 	}
 	timestamp := string(time.Now().Format("02012006_150405"))
 	bkpFile := filepath.Join(common.SnapshotsDir, strings.Split(filepath.Base(fileName), ".")[0]+"-"+timestamp+".env")
-	readConfigFile(fileName)
+	ReadConfigFile(fileName)
 	err := viper.WriteConfigAs(bkpFile)
 	if err != nil {
 		fmt.Println("Error: while writing to backup file - ", err)

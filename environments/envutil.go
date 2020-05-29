@@ -45,7 +45,7 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
 	defer f.Close()
 	if f != nil {
-		shipmateUrl := config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
+		shipmateUrl := getShipmateUrl()
 		dataToWrite := fmt.Sprintf("include:\n  - remote: '%s'", shipmateUrl)
 		_, _ = f.Write([]byte(dataToWrite))
 	}
@@ -53,6 +53,7 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 	files, direrr := ioutil.ReadDir(sshDir)
 	// .ssh dir not present or present but no keys
 	if _, err := os.Stat(sshDir); os.IsNotExist(err) || (direrr == nil && len(files) < 2) {
+		fmt.Printf("Creating dir %s\n", sshDir)
 		_ = os.Mkdir(sshDir, 0700)
 		err := generateSSHKeyPair(sshDir)
 		if err != nil {
@@ -159,9 +160,24 @@ func encodePrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
 }
 
 func writeKeyToFile(keyBytes []byte, file string, perm os.FileMode) error {
+	fmt.Printf("Creating ssh key %s\n", file)
 	err := ioutil.WriteFile(file, keyBytes, perm)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func getShipmateUrl() string {
+	// get SHIPMATE_WORKFLOW_URL from if0.env
+	config.ReadConfigFile(common.If0Default)
+	shipmateUrl := config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
+	// if not found, add it to if0.env and return the value
+	if shipmateUrl == "" {
+		f, _ := os.OpenFile(common.If0Default, os.O_APPEND, 0644)
+		defer f.Close()
+		_, _ = f.WriteString("SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
+	}
+	config.ReadConfigFile(common.If0Default)
+	return config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
 }
