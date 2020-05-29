@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"if0/common"
 	"if0/common/sync"
+	"if0/config"
 	"os"
 	"path/filepath"
 	"testing"
@@ -39,6 +40,9 @@ func TestAddEnvClone(t *testing.T) {
 		r := &git.Repository{}
 		return r, nil
 	}
+	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
+		return nil
+	}
 	err := AddEnv("sample_repo")
 	assert.Nil(t, err)
 }
@@ -55,7 +59,7 @@ func TestSyncEnvError(t *testing.T) {
 	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		return errors.New("test-repo-sync-error")
 	}
-	err := SyncEnv("sample-repo")
+	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
 	assert.EqualError(t, err, "test-repo-sync-error")
 }
 
@@ -66,6 +70,38 @@ func TestSyncEnv(t *testing.T) {
 	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 		return nil
 	}
-	err := SyncEnv("sample-repo")
+	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
 	assert.Nil(t, err)
+}
+
+func TestLoadEnvNoFiles(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	os.Remove(filepath.Join("testdata", "sample-repo", "if0.env"))
+	err := loadEnv(common.EnvDir)
+	assert.EqualError(t, err, "no .env files found")
+}
+
+func TestLoadEnv(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	f, _ := os.OpenFile(filepath.Join("testdata", "sample-repo", "if0.env"), os.O_CREATE|os.O_RDWR, 0644)
+	defer f.Close()
+	_, _ = f.Write([]byte("IF0_ENVIRONMENT=sample-repo"))
+	_ = loadEnv(common.EnvDir)
+	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
+}
+
+func TestEnvInit(t *testing.T) {
+	common.EnvDir = "testdata"
+	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
+		return nil
+	}
+	envInit(nil, nil, "sample-repo")
+	assert.DirExists(t, filepath.Join("testdata", "sample-repo", ".ssh"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "dash1.env"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "zero.env"))
+	assert.FileExists(t, filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
+	os.RemoveAll(filepath.Join("testdata", "sample-repo", ".ssh"))
+	os.Remove(filepath.Join("testdata", "sample-repo", "dash1.env"))
+	os.Remove(filepath.Join("testdata", "sample-repo", "zero.env"))
+	os.Remove(filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
 }

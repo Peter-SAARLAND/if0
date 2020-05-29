@@ -124,19 +124,9 @@ func TestGetAuthSSHParseWithPassphraseError(t *testing.T) {
 	assert.EqualError(t, err, "test-parse-error")
 }
 
-//func generateTestPrivKey() *os.File {
-//	_ = os.Mkdir(".ssh", 0777)
-//	f, err := os.OpenFile(filepath.Join(".ssh", "id_rsa"), os.O_CREATE|os.O_RDWR, 0777)
-//	fmt.Println(err)
-//	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-//	// Convert it to pem
-//	block := &pem.Block{
-//		Type:  "RSA PRIVATE KEY",
-//		Bytes: x509.MarshalPKCS1PrivateKey(key),
-//	}
-//	// Encrypt the pem
-//	block, _ = x509.EncryptPEMBlock(rand.Reader, block.Type, block.Bytes, []byte("pwd"), x509.PEMCipherAES256)
-//	pembytes := pem.EncodeToMemory(block)
-//	_ = ioutil.WriteFile(f.Name(), pembytes, 0666)
-//	return f
-//}
+func TestParseGitConfig(t *testing.T) {
+	common.RootPath = "testdata"
+	user, email := getUserConfig()
+	assert.Equal(t, user, "if0")
+	assert.Equal(t, email, "if0@if0.com")
+}

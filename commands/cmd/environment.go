@@ -27,18 +27,20 @@ import (
 const (
 	addArg  = "add"
 	syncArg = "sync"
-	loadArg = "load"
+	planArg = "plan"
+	provisionArg = "provision"
+	zeroArg = "zero"
 )
 
 // environmentCmd represents the environment command
 var environmentCmd = &cobra.Command{
-	Use:   "environment",
+	Use:   "env",
 	Short: "add zero config repository to environments",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println("Please provide valid arguments.")
-			fmt.Println("accepted args: 'add', 'sync', 'load'")
+			fmt.Println("accepted args: 'add', 'sync', 'plan', 'zero', 'provision'")
 			return
 		}
 		// cloning
@@ -58,38 +60,56 @@ var environmentCmd = &cobra.Command{
 
 		// syncing
 		if args[0] == syncArg {
-			if len(args) < 2 {
-				fmt.Println("Please provide valid arguments.")
-				fmt.Println("example command: if0 environment sync if0-config")
-				return
-			}
-			repoName := args[1]
-			err := environments.SyncEnv(repoName)
+			envDir := getEnvDir(args)
+			err := environments.SyncEnv(envDir)
 			if err != nil {
 				fmt.Println("Error: Syncing repo - ", err)
 				return
 			}
 		}
 
-		// loading Environment
-		if args[0] == loadArg {
-			var envDir string
-			if len(args) < 2 {
-				envDir, _ = os.Getwd()
-			} else {
-				envDir = filepath.Join(common.EnvDir, args[1])
-			}
-			fmt.Printf("Loading configuration from %s \n", envDir)
-			err := environments.LoadEnv(envDir)
+		// planning Environment
+		if args[0] == planArg {
+			envDir := getEnvDir(args)
+			err := environments.PlanEnv(envDir)
 			if err != nil {
-				fmt.Println("Error: Loading repo - ", err)
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// provisioning environment
+		if args[0] == provisionArg {
+			envDir := getEnvDir(args)
+			err := environments.ProvisionEnv(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
+				return
+			}
+		}
+
+		// creating zero infrastructure
+		if args[0] == zeroArg {
+			envDir := getEnvDir(args)
+			err := environments.CreateZeroInfra(envDir)
+			if err != nil {
+				fmt.Println("Error: Planning env - ", err)
 				return
 			}
 		}
 	},
 }
 
+func getEnvDir(args []string) string {
+	var envDir string
+	if len(args) < 2 {
+		envDir, _ = os.Getwd()
+	} else {
+		envDir = filepath.Join(common.EnvDir, args[1])
+	}
+	return envDir
+}
+
 func init() {
 	rootCmd.AddCommand(environmentCmd)
-	//environmentCmd.Flags().StringVar(&add, "add", "", "add a new environments config git repository")
 }

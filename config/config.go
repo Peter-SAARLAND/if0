@@ -47,16 +47,17 @@ func PrintCurrentRunningConfig() {
 			fmt.Println("Error: Creating a new config file - ", err)
 			return
 		}
-		_, err = f.WriteString("IFO_VERSION=1")
+		defer f.Close()
+		_, err = f.WriteString("IF0_VERSION=1\n" +
+			"SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
 		if err != nil {
 			fmt.Println("Error: Writing to the new config file - ", err)
 			return
 		}
 	}
 	readConfigFile(common.If0Default)
-	allConfig := viper.AllSettings()
-	for key, val := range allConfig {
-		fmt.Println(key, ":", val)
+	for key, val := range viper.AllSettings() {
+		fmt.Println(strings.ToUpper(key), ":", val)
 	}
 }
 
@@ -122,7 +123,7 @@ func IsConfigFileValid(configFile string, zero bool) (bool, error) {
 	if err != nil {
 		fmt.Println("Error: Reading config file: ", err)
 	}
-	if0Version := viper.IsSet(common.IFO_VERSION)
+	if0Version := viper.IsSet(common.IF0_VERSION)
 	zeroVersion := viper.IsSet(common.ZERO_VERSION)
 
 	if !if0Version && !zeroVersion {

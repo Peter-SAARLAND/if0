@@ -76,11 +76,14 @@ func (s *Sync) AddFile(w *git.Worktree, file string) error {
 }
 
 func (s *Sync) Commit(w *git.Worktree) error {
+	name, email := getUserConfig()
 	commitMsg := "feat: updating config files - " + time.Now().Format("02012006_150405")
 	commitOptions := &git.CommitOptions{
 		All: false,
 		Author: &object.Signature{
 			When: time.Now(),
+			Name: name,
+			Email: email,
 		},
 	}
 	_, err := w.Commit(commitMsg, commitOptions)
@@ -98,7 +101,8 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 }
 
 func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, common.EnvDir)
+	repoName := strings.Split(filepath.Base(repoUrl), ".")[0]
+	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, filepath.Join(common.EnvDir, repoName))
 	cloneOptions := &git.CloneOptions{
 		URL:      repoUrl,
 		Auth:     auth,

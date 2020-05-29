@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	IFO_VERSION  = "IF0_VERSION"
+	IF0_VERSION  = "IF0_VERSION"
 	ZERO_VERSION = "ZERO_VERSION"
 )
 
@@ -16,4 +16,9 @@ var (
 	EnvDir       = filepath.Join(If0Dir, ".environments")
 	SnapshotsDir = filepath.Join(If0Dir, ".snapshots")
 	If0Default   = filepath.Join(If0Dir, "if0.env")
+)
+
+// common flag
+var (
+	Verbose bool
 )
