@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"if0/common"
 	"if0/common/sync"
+	"if0/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -43,12 +44,16 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 	createFile(filepath.Join(envPath, "zero.env"))
 	createFile(filepath.Join(envPath, "dash1.env"))
 	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
+	defer f.Close()
 	if f != nil {
-		dataToWrite := "include:\n  - remote: 'https://gitlab.com/peter.saarland/scratch/-/raw/master/ci/templates/shipmate.gitlab-ci.yml'"
+		shipmateUrl := config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
+		dataToWrite := fmt.Sprintf("include:\n  - remote: '%s'", shipmateUrl)
 		_, _ = f.Write([]byte(dataToWrite))
 	}
 	sshDir := filepath.Join(envPath, ".ssh")
-	if _, err := os.Stat(sshDir); os.IsNotExist(err) {
+	files, direrr := ioutil.ReadDir(sshDir)
+	// .ssh dir not present or present but no keys
+	if _, err := os.Stat(sshDir); os.IsNotExist(err) || (direrr == nil && len(files) < 2) {
 		_ = os.Mkdir(sshDir, os.ModeDir)
 		err := generateSSHKeyPair(sshDir)
 		if err != nil {
@@ -62,10 +67,10 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 }
 
 func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
-	fmt.Println("Syncing environment init file changes")
 	w, _ := syncObj.GetWorktree(r)
 	status, _ := syncObj.Status(w)
 	if len(status) > 0 {
+		fmt.Println("Syncing environment init file changes")
 		for file, _ := range status {
 			_ = syncObj.AddFile(w, file)
 		}

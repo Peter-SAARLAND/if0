@@ -16,15 +16,21 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	_ = os.RemoveAll(common.If0Dir)
-	out := readStdOutPrintCurrentRunningConfig()
-	assert.Contains(t, string(out), "ifo_version : 1\n")
+	PrintCurrentRunningConfig()
+	readConfigFile(common.If0Default)
+	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
+	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
+		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
 }
 
 func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
-	out := readStdOutPrintCurrentRunningConfig()
-	assert.Equal(t, "ifo_version : 1\n", string(out))
+	PrintCurrentRunningConfig()
+	readConfigFile(common.If0Default)
+	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
+	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
+		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
 }
 
 func TestAddConfigFileReplace(t *testing.T) {
@@ -99,18 +105,6 @@ func TestSetEnvVariable(t *testing.T) {
 	val := GetEnvVariable("test")
 	fmt.Println(viper.AllSettings())
 	assert.Equal(t, "val", val)
-}
-
-func readStdOutPrintCurrentRunningConfig() []byte {
-	rescueStdout := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	PrintCurrentRunningConfig()
-	_ = w.Close()
-	out, _ := ioutil.ReadAll(r)
-	os.Stdout = rescueStdout
-	_ = r.Close()
-	return out
 }
 
 func TestIsConfigFileValidTrue(t *testing.T) {

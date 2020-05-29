@@ -34,13 +34,13 @@ const (
 
 // environmentCmd represents the environment command
 var environmentCmd = &cobra.Command{
-	Use:   "environment",
+	Use:   "env",
 	Short: "add zero config repository to environments",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
 			fmt.Println("Please provide valid arguments.")
-			fmt.Println("accepted args: 'add', 'sync', 'load'")
+			fmt.Println("accepted args: 'add', 'sync', 'plan', 'zero', 'provision'")
 			return
 		}
 		// cloning

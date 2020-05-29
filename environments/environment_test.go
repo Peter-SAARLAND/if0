@@ -84,6 +84,7 @@ func TestLoadEnvNoFiles(t *testing.T) {
 func TestLoadEnv(t *testing.T) {
 	common.EnvDir = filepath.Join("testdata", "sample-repo")
 	f, _ := os.OpenFile(filepath.Join("testdata", "sample-repo", "if0.env"), os.O_CREATE|os.O_RDWR, 0644)
+	defer f.Close()
 	_, _ = f.Write([]byte("IF0_ENVIRONMENT=sample-repo"))
 	_ = loadEnv(common.EnvDir)
 	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
