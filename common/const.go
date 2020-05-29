@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	IFO_VERSION  = "IF0_VERSION"
+	IF0_VERSION  = "IF0_VERSION"
 	ZERO_VERSION = "ZERO_VERSION"
 )
 
