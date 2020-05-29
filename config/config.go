@@ -55,9 +55,19 @@ func PrintCurrentRunningConfig() {
 			return
 		}
 	}
+	addShipmateUrl()
 	readConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
 		fmt.Println(strings.ToUpper(key), ":", val)
+	}
+}
+
+func addShipmateUrl() {
+	readConfigFile(common.If0Default)
+	if GetEnvVariable("SHIPMATE_WORKFLOW_URL") == "" {
+		f, _ := os.OpenFile(common.If0Default, os.O_APPEND, 0644)
+		defer f.Close()
+		_, _ = f.WriteString("SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
 	}
 }
 

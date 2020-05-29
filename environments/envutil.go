@@ -42,7 +42,6 @@ func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
 func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error {
 	envPath := filepath.Join(common.EnvDir, envName)
 	createFile(filepath.Join(envPath, "zero.env"))
-	createFile(filepath.Join(envPath, "dash1.env"))
 	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
 	defer f.Close()
 	if f != nil {
