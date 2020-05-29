@@ -48,7 +48,7 @@ func PrintCurrentRunningConfig() {
 			return
 		}
 		defer f.Close()
-		_, err = f.WriteString("IFO_VERSION=1\n")
+		_, err = f.WriteString("IF0_VERSION=1\n")
 		if err != nil {
 			fmt.Println("Error: Writing to the new config file - ", err)
 			return
@@ -60,6 +60,7 @@ func PrintCurrentRunningConfig() {
 		defer f.Close()
 		_, _ = f.WriteString("SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
 	}
+	readConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
 		fmt.Println(strings.ToUpper(key), ":", val)
 	}
