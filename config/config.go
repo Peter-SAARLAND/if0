@@ -55,7 +55,7 @@ func PrintCurrentRunningConfig() {
 			return
 		}
 	}
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
 		fmt.Println(strings.ToUpper(key), ":", val)
 	}

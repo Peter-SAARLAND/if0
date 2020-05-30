@@ -17,7 +17,7 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	_ = os.RemoveAll(common.If0Dir)
 	PrintCurrentRunningConfig()
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
 	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
 		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
@@ -27,7 +27,7 @@ func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
 	PrintCurrentRunningConfig()
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
 	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
 		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
@@ -40,7 +40,7 @@ func TestAddConfigFileReplace(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1"), 0644)
 	AddConfigFile(testConfig, false)
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
@@ -53,7 +53,7 @@ func TestMergeConfigFiles(t *testing.T) {
 	testConfig := "config2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey2=testval2\nIF0_VERSION=1"), 0644)
 	_ = MergeConfigFiles(testConfig, common.If0Default, false)
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
@@ -68,7 +68,7 @@ func TestAddConfigFileEnvironment(t *testing.T) {
 	testConfig := "zero1.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey1=zeroval1"), 0644)
 	AddConfigFile(testConfig, true)
-	readConfigFile(filepath.Join(common.EnvDir, testConfig))
+	ReadConfigFile(filepath.Join(common.EnvDir, testConfig))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
@@ -82,7 +82,7 @@ func TestMergeFilesEnvironment(t *testing.T) {
 	testConfig := "zero2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey2=zeroval2\nZERO_VERSION=2"), 0644)
 	_ = MergeConfigFiles(testConfig, "zero1.env", true)
-	readConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
+	ReadConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
