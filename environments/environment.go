@@ -65,7 +65,7 @@ func SyncEnv(envDir string) error {
 	return nil
 }
 
-func PlanEnv(envDir string) error {
+func Dash1Plan(envDir string) error {
 	envName := strings.Split(filepath.Base(envDir), ".")[0]
 	err := dockercmd.MakePlan(envName)
 	if err != nil {
@@ -74,7 +74,7 @@ func PlanEnv(envDir string) error {
 	return nil
 }
 
-func ProvisionEnv(envDir string) error {
+func ZeroProvision(envDir string) error {
 	envName := strings.Split(filepath.Base(envDir), ".")[0]
 	err := dockercmd.MakeProvision(envName)
 	if err != nil {
@@ -83,9 +83,18 @@ func ProvisionEnv(envDir string) error {
 	return nil
 }
 
-func CreateZeroInfra(envDir string) error {
+func Dash1Zero(envDir string) error {
 	envName := strings.Split(filepath.Base(envDir), ".")[0]
 	err := dockercmd.MakeZero(envName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func Dash1Destroy(envDir string) error {
+	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	err := dockercmd.MakeDestroy(envName)
 	if err != nil {
 		return err
 	}

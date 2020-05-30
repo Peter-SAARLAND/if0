@@ -30,6 +30,7 @@ const (
 	planArg = "plan"
 	provisionArg = "provision"
 	zeroArg = "zero"
+	destroyArg = "destroy"
 )
 
 // environmentCmd represents the environment command
@@ -43,8 +44,9 @@ var environmentCmd = &cobra.Command{
 			fmt.Println("accepted args: 'add', 'sync', 'plan', 'zero', 'provision'")
 			return
 		}
-		// cloning
-		if args[0] == addArg {
+
+		switch args[0] {
+		case addArg:
 			if len(args) < 2 {
 				fmt.Println("Please provide valid arguments.")
 				fmt.Println("example command: if0 environment add git@gitlab.com:abc/def.git")
@@ -56,44 +58,39 @@ var environmentCmd = &cobra.Command{
 				fmt.Println("Error: Adding repo - ", err)
 				return
 			}
-		}
-
-		// syncing
-		if args[0] == syncArg {
+		case syncArg:
 			envDir := getEnvDir(args)
 			err := environments.SyncEnv(envDir)
 			if err != nil {
 				fmt.Println("Error: Syncing repo - ", err)
 				return
 			}
-		}
-
-		// planning Environment
-		if args[0] == planArg {
+		case planArg:
 			envDir := getEnvDir(args)
-			err := environments.PlanEnv(envDir)
+			err := environments.Dash1Plan(envDir)
 			if err != nil {
-				fmt.Println("Error: Planning env - ", err)
+				fmt.Println("Error: dash1 plan - ", err)
 				return
 			}
-		}
-
-		// provisioning environment
-		if args[0] == provisionArg {
+		case provisionArg:
 			envDir := getEnvDir(args)
-			err := environments.ProvisionEnv(envDir)
+			err := environments.ZeroProvision(envDir)
 			if err != nil {
-				fmt.Println("Error: Planning env - ", err)
+				fmt.Println("Error: zero provision - ", err)
 				return
 			}
-		}
-
-		// creating zero infrastructure
-		if args[0] == zeroArg {
+		case zeroArg:
 			envDir := getEnvDir(args)
-			err := environments.CreateZeroInfra(envDir)
+			err := environments.Dash1Zero(envDir)
 			if err != nil {
-				fmt.Println("Error: Planning env - ", err)
+				fmt.Println("Error: dash1 zero - ", err)
+				return
+			}
+		case destroyArg:
+			envDir := getEnvDir(args)
+			err := environments.Dash1Destroy(envDir)
+			if err != nil {
+				fmt.Println("Error: dash1 destroy - ", err)
 				return
 			}
 		}
