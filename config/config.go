@@ -10,8 +10,6 @@ import (
 	"strings"
 )
 
-
-
 // SetEnvVariable sets a config variable
 func SetEnvVariable(key, value string) {
 	key = strings.ToUpper(strings.TrimSpace(key))
@@ -31,29 +29,17 @@ func GetEnvVariable(key string) string {
 
 // PrintCurrentRunningConfig reads the current running if0/env configuration file and prints it
 func PrintCurrentRunningConfig() {
-	present := isFilePresent(common.If0Default)
-	if !present {
-		fmt.Println("Current running configuration missing. Creating a default if0.env file at ~/.if0")
-		if _, err := os.Stat(common.If0Dir); os.IsNotExist(err) {
-			fmt.Println("Directory does not exist, creating dir .if0")
-			err = os.Mkdir(common.If0Dir, os.ModeDir)
-			if err != nil {
-				fmt.Println("Error: Creating .if0 dir - ", err)
-				return
-			}
-		}
-		f, err := os.OpenFile(common.If0Default, os.O_CREATE|os.O_RDWR, 0644)
+	if _, err := os.Stat(common.If0Dir); os.IsNotExist(err) {
+		fmt.Println("Directory does not exist, creating dir .if0")
+		err = os.Mkdir(common.If0Dir, os.ModeDir)
 		if err != nil {
-			fmt.Println("Error: Creating a new config file - ", err)
+			fmt.Println("Error: Creating .if0 dir - ", err)
 			return
 		}
-		defer f.Close()
-		_, err = f.WriteString("IF0_VERSION=1\n" +
-			"SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
-		if err != nil {
-			fmt.Println("Error: Writing to the new config file - ", err)
-			return
-		}
+	}
+	err := writeDefaultIf0Config(common.DefaultEnvFile)
+	if err != nil {
+		return
 	}
 	ReadConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
