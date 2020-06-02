@@ -7,11 +7,8 @@ import (
 	"github.com/spf13/viper"
 	"if0/common"
 	"os"
-	"path/filepath"
 	"strings"
 )
-
-
 
 // SetEnvVariable sets a config variable
 func SetEnvVariable(key, value string) {
@@ -32,22 +29,17 @@ func GetEnvVariable(key string) string {
 
 // PrintCurrentRunningConfig reads the current running if0/env configuration file and prints it
 func PrintCurrentRunningConfig() {
-	present := isFilePresent(common.If0Default)
-	if !present {
-		fmt.Println("Current running configuration missing. Creating a default if0.env file at ~/.if0")
-		if _, err := os.Stat(common.If0Dir); os.IsNotExist(err) {
-			fmt.Println("Directory does not exist, creating dir .if0")
-			err = os.Mkdir(common.If0Dir, os.ModeDir)
-			if err != nil {
-				fmt.Println("Error: Creating .if0 dir - ", err)
-				return
-			}
-		}
-		defaultEnvFile := filepath.Join("config", "defenv", "defaultIf0.env")
-		err := writeDefaultIf0Config(defaultEnvFile)
+	if _, err := os.Stat(common.If0Dir); os.IsNotExist(err) {
+		fmt.Println("Directory does not exist, creating dir .if0")
+		err = os.Mkdir(common.If0Dir, os.ModeDir)
 		if err != nil {
+			fmt.Println("Error: Creating .if0 dir - ", err)
 			return
 		}
+	}
+	err := writeDefaultIf0Config(common.DefaultEnvFile)
+	if err != nil {
+		return
 	}
 	ReadConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {

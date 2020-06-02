@@ -15,6 +15,7 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.RootPath = "config"
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.DefaultEnvFile = filepath.Join("defenv", "defaultIf0.env")
 	_ = os.RemoveAll(common.If0Dir)
 	PrintCurrentRunningConfig()
 	ReadConfigFile(common.If0Default)
@@ -26,6 +27,7 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.DefaultEnvFile = filepath.Join("defenv", "defaultIf0.env")
 	PrintCurrentRunningConfig()
 	ReadConfigFile(common.If0Default)
 	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
@@ -216,6 +218,7 @@ func TestParseGcAutoStr(t *testing.T) {
 func TestWriteDefaultIf0ConfigNone(t *testing.T) {
 	common.If0Default = filepath.Join("testdata", "if0.env")
 	defFile := filepath.Join("testdata", "testDefEnv.env")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\n"), 0644)
 	os.Remove(common.If0Default)
 	err := writeDefaultIf0Config(defFile)
 	assert.Nil(t, err)
