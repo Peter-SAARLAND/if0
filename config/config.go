@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"if0/common"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -42,16 +43,9 @@ func PrintCurrentRunningConfig() {
 				return
 			}
 		}
-		f, err := os.OpenFile(common.If0Default, os.O_CREATE|os.O_RDWR, 0644)
+		defaultEnvFile := filepath.Join("config", "defenv", "defaultIf0.env")
+		err := writeDefaultIf0Config(defaultEnvFile)
 		if err != nil {
-			fmt.Println("Error: Creating a new config file - ", err)
-			return
-		}
-		defer f.Close()
-		_, err = f.WriteString("IF0_VERSION=1\n" +
-			"SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
-		if err != nil {
-			fmt.Println("Error: Writing to the new config file - ", err)
 			return
 		}
 	}

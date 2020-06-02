@@ -129,3 +129,27 @@ func backupToSnapshots(fileName string) error {
 	}
 	return nil
 }
+
+// writeDefaultIf0Config creates an if0.env file if not present at ~/.if0/
+// and copies the contents of defenv/defaultIf0.env to if0.env.
+// If if0.env is present at ~/.if0/, it appends the new contents from defenv/defaultIf0.env to if0.env
+// This requires the user to run 'if0 config'
+func writeDefaultIf0Config(defaultEnvFile string) error {
+	defEnvBytes, err := ioutil.ReadFile(defaultEnvFile)
+	if err != nil {
+		fmt.Println("Error: Reading default .env file - ", err)
+		return err
+	}
+
+	if _, err := os.Stat(common.If0Default); os.IsNotExist(err) {
+		fmt.Println("if0.env does not exist, creating ", common.If0Default)
+		err = ioutil.WriteFile(common.If0Default, defEnvBytes, 0644)
+		if err != nil {
+			fmt.Println("Error: Writing to if0.env file - ", err)
+			return err
+		}
+	} else {
+		mergeConfigFiles(defaultEnvFile, common.If0Default)
+	}
+	return nil
+}

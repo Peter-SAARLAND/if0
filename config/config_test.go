@@ -212,3 +212,29 @@ func TestParseGcAutoStr(t *testing.T) {
 	assert.Equal(t, false, parseGcAuto("no"))
 	assert.Equal(t, false, parseGcAuto("NO"))
 }
+
+func TestWriteDefaultIf0ConfigNone(t *testing.T) {
+	common.If0Default = filepath.Join("testdata", "if0.env")
+	defFile := filepath.Join("testdata", "testDefEnv.env")
+	os.Remove(common.If0Default)
+	err := writeDefaultIf0Config(defFile)
+	assert.Nil(t, err)
+	assert.FileExists(t, common.If0Default)
+	defBytes, _ := ioutil.ReadFile(defFile)
+	newIf0Bytes, _ := ioutil.ReadFile(common.If0Default)
+	assert.Equal(t, defBytes, newIf0Bytes)
+}
+
+func TestWriteDefaultIf0ConfigAppend(t *testing.T) {
+	common.If0Default = filepath.Join("testdata", "if0.env")
+	defFile := filepath.Join("testdata", "testDefEnv.env")
+	f, _ := os.OpenFile(defFile, os.O_APPEND, 0644)
+	defer f.Close()
+	_, _ = f.WriteString("APPEND=VAL\n")
+	err := writeDefaultIf0Config(defFile)
+	assert.Nil(t, err)
+	assert.FileExists(t, common.If0Default)
+	newIf0Bytes, _ := ioutil.ReadFile(common.If0Default)
+	assert.Contains(t, string(newIf0Bytes), "APPEND=VAL")
+	os.Remove(common.If0Default)
+}
