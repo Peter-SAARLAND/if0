@@ -231,13 +231,12 @@ func TestWriteDefaultIf0ConfigNone(t *testing.T) {
 func TestWriteDefaultIf0ConfigAppend(t *testing.T) {
 	common.If0Default = filepath.Join("testdata", "if0.env")
 	defFile := filepath.Join("testdata", "testDefEnv.env")
-	f, _ := os.OpenFile(defFile, os.O_APPEND, 0644)
-	defer f.Close()
-	_, _ = f.WriteString("APPEND=VAL\n")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\nAPPEND=VAL\n"), 0644)
 	err := writeDefaultIf0Config(defFile)
 	assert.Nil(t, err)
 	assert.FileExists(t, common.If0Default)
 	newIf0Bytes, _ := ioutil.ReadFile(common.If0Default)
 	assert.Contains(t, string(newIf0Bytes), "APPEND=VAL")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\n"), 0644)
 	os.Remove(common.If0Default)
 }
