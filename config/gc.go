@@ -48,7 +48,7 @@ func getCreationTome(f os.FileInfo) time.Time {
 }
 
 func getGcPeriod() (bool, int) {
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	gcAutoStr := GetEnvVariable("GC_AUTO")
 	gcPeriodStr := GetEnvVariable("GC_PERIOD")
 

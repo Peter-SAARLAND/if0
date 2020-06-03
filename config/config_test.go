@@ -15,9 +15,10 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 	common.RootPath = "config"
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.DefaultEnvFile = filepath.Join("defenv", "defaultIf0.env")
 	_ = os.RemoveAll(common.If0Dir)
 	PrintCurrentRunningConfig()
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
 	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
 		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
@@ -26,8 +27,9 @@ func TestPrintCurrentRunningConfigNoDefaultConfig(t *testing.T) {
 func TestPrintCurrentRunningConfigWithDefaultConfig(t *testing.T) {
 	common.If0Dir = "testif0"
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
+	common.DefaultEnvFile = filepath.Join("defenv", "defaultIf0.env")
 	PrintCurrentRunningConfig()
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	assert.Equal(t, "1", GetEnvVariable("IF0_VERSION"))
 	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml",
 		GetEnvVariable("SHIPMATE_WORKFLOW_URL"))
@@ -40,7 +42,7 @@ func TestAddConfigFileReplace(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1"), 0644)
 	AddConfigFile(testConfig, false)
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
@@ -53,7 +55,7 @@ func TestMergeConfigFiles(t *testing.T) {
 	testConfig := "config2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey2=testval2\nIF0_VERSION=1"), 0644)
 	_ = MergeConfigFiles(testConfig, common.If0Default, false)
-	readConfigFile(common.If0Default)
+	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "testval1", configMap["testkey1"])
@@ -68,7 +70,7 @@ func TestAddConfigFileEnvironment(t *testing.T) {
 	testConfig := "zero1.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey1=zeroval1"), 0644)
 	AddConfigFile(testConfig, true)
-	readConfigFile(filepath.Join(common.EnvDir, testConfig))
+	ReadConfigFile(filepath.Join(common.EnvDir, testConfig))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
@@ -82,7 +84,7 @@ func TestMergeFilesEnvironment(t *testing.T) {
 	testConfig := "zero2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey2=zeroval2\nZERO_VERSION=2"), 0644)
 	_ = MergeConfigFiles(testConfig, "zero1.env", true)
-	readConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
+	ReadConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
@@ -211,4 +213,30 @@ func TestParseGcAutoStr(t *testing.T) {
 	assert.Equal(t, false, parseGcAuto("FALSE"))
 	assert.Equal(t, false, parseGcAuto("no"))
 	assert.Equal(t, false, parseGcAuto("NO"))
+}
+
+func TestWriteDefaultIf0ConfigNone(t *testing.T) {
+	common.If0Default = filepath.Join("testdata", "if0.env")
+	defFile := filepath.Join("testdata", "testDefEnv.env")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\n"), 0644)
+	os.Remove(common.If0Default)
+	err := writeDefaultIf0Config(defFile)
+	assert.Nil(t, err)
+	assert.FileExists(t, common.If0Default)
+	defBytes, _ := ioutil.ReadFile(defFile)
+	newIf0Bytes, _ := ioutil.ReadFile(common.If0Default)
+	assert.Equal(t, defBytes, newIf0Bytes)
+}
+
+func TestWriteDefaultIf0ConfigAppend(t *testing.T) {
+	common.If0Default = filepath.Join("testdata", "if0.env")
+	defFile := filepath.Join("testdata", "testDefEnv.env")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\nAPPEND=VAL\n"), 0644)
+	err := writeDefaultIf0Config(defFile)
+	assert.Nil(t, err)
+	assert.FileExists(t, common.If0Default)
+	newIf0Bytes, _ := ioutil.ReadFile(common.If0Default)
+	assert.Contains(t, string(newIf0Bytes), "APPEND=VAL")
+	ioutil.WriteFile(defFile, []byte("IF0_VERSION=1\nTESTIF0=YES\n"), 0644)
+	os.Remove(common.If0Default)
 }
