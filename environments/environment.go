@@ -16,7 +16,6 @@ import (
 
 var (
 	syncObj  = sync.Sync{}
-	clone    = syncObj.Clone
 	getAuth  = sync.GetSyncAuth
 	repoSync = config.GitRepoSync
 )

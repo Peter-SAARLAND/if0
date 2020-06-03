@@ -111,7 +111,7 @@ func TestGetSSHAuthError(t *testing.T) {
 	var testObj Auth
 	auth, err := getAuth(&testObj, "sample-storage")
 	assert.Nil(t, auth)
-	assert.EqualError(t, err, "invalid REMOTE_STORAGE link")
+	assert.EqualError(t, err, "invalid url")
 }
 
 func TestGetAuthSSHParseWithPassphraseError(t *testing.T) {

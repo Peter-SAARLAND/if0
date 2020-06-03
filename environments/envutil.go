@@ -119,7 +119,7 @@ func generateSSHKeyPair(sshDir string) error {
 		return err
 	}
 
-	err = writeKeyToFile([]byte(publicKeyBytes), publicKeyPath, 0644)
+	err = writeKeyToFile(publicKeyBytes, publicKeyPath, 0644)
 	if err != nil {
 		return err
 	}
