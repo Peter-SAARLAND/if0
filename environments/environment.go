@@ -21,31 +21,29 @@ var (
 	repoSync = config.GitRepoSync
 )
 
-func AddEnv(repoUrl string) error {
-	// get authorization
-	authObj := sync.Auth{}
-	auth, err := getAuth(&authObj, repoUrl)
-	if err != nil {
-		fmt.Println("Authentication error - ", err)
-		return err
+func AddEnv(addEnvArgs []string) error {
+	var repoName, repoUrl string
+	repoName = addEnvArgs[1]
+	if len(addEnvArgs) > 2 {
+		repoUrl = addEnvArgs[2]
 	}
-
-	r, err := clone(repoUrl, auth)
-	if err != nil {
-		if err.Error() == "remote repository is empty" {
-			r, err = cloneEmptyRepo(repoUrl)
-			if err != nil {
-				return err
-			}
-		} else {
+	config.ReadConfigFile(common.If0Default)
+	gitlabToken := config.GetEnvVariable("GL_TOKEN")
+	if gitlabToken == "" || repoUrl != "" {
+		// adding environment locally (to sync with later)
+		// or syncing a local environment that has already been added
+		err := createLocalEnv(repoName, repoUrl)
+		if err != nil {
+			return err
+		}
+	} else {
+		// adding environment using GitLab token
+		err := createGLProject(repoName, gitlabToken)
+		if err != nil {
+			fmt.Println("Error: Adding Private Project -", err)
 			return err
 		}
 	}
-
-	//check if the necessary files are present in the environment
-	//if not, add them with basic information
-	envName := strings.Split(filepath.Base(repoUrl), ".")[0]
-	envInit(r, auth, envName)
 	return nil
 }
 
@@ -57,7 +55,7 @@ func SyncEnv(envDir string) error {
 		return errors.New("repository not found")
 	}
 
-	err := repoSync(&syncObj, envDir, false)
+	err := repoSync(&syncObj, "", envDir)
 	if err != nil {
 		fmt.Println("Error: Syncing external repo - ", err)
 		return err
@@ -100,7 +98,6 @@ func Dash1Destroy(envDir string) error {
 	}
 	return nil
 }
-
 
 func loadEnv(envDir string) error {
 	fmt.Println("Reading .env files from", envDir)

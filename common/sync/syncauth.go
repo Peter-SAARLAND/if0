@@ -45,7 +45,7 @@ func getAuth(authObj AuthOps, remoteStorage string) (transport.AuthMethod, error
 			return nil, err
 		}
 	} else {
-		return nil, errors.New("invalid REMOTE_STORAGE link")
+		return nil, errors.New("invalid url")
 	}
 	return auth, nil
 }

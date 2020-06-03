@@ -12,6 +12,7 @@ import (
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
+	gitlabclient "if0/environments/git"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -39,8 +40,8 @@ func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
 }
 
 // This function checks if the environment directory contains necessary files, if not, creates them.
-func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error {
-	envPath := filepath.Join(common.EnvDir, envName)
+func envInit(envPath string) error {
+	//envPath := filepath.Join(common.EnvDir, envName)
 	createFile(filepath.Join(envPath, "zero.env"))
 	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
 	defer f.Close()
@@ -61,9 +62,7 @@ func envInit(r *git.Repository, auth transport.AuthMethod, envName string) error
 			return err
 		}
 	}
-	// Pushing the newly added changes to the remote repository
-	err := pushEnvInitChanges(r, auth)
-	return err
+	return nil
 }
 
 func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
@@ -180,4 +179,80 @@ func getShipmateUrl() string {
 	}
 	config.ReadConfigFile(common.If0Default)
 	return config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
+}
+
+func createLocalEnv(repoName string, repoUrl string) error {
+	envDir := createNestedDirPath(repoName, repoUrl)
+	addLocalEnv(envDir)
+	// if a remote repository (empty) url is provided, sync the changes
+	if repoUrl != "" {
+		err := syncLocalEnvChanges(repoUrl, envDir)
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Println("No remote repository url was found for sync. "+
+			"The environment has been created locally at ", envDir)
+		fmt.Println("To sync the local changes, run `if0 env add repo-name repo-url`")
+	}
+	return nil
+}
+
+func createGLProject(repoName, glToken string) error {
+	// creating a private project in gitlab
+	sshRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
+	if err != nil {
+		return err
+	}
+	// adding the environment locally
+	envDir := createNestedDirPath(repoName, sshRepoUrl)
+	addLocalEnv(envDir)
+	// syncing local changes with the private project
+	err = syncLocalEnvChanges(sshRepoUrl, envDir)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func syncLocalEnvChanges(repoUrl string, envDir string) error {
+	authObj := sync.Auth{}
+	auth, err := getAuth(&authObj, repoUrl)
+	if err != nil {
+		fmt.Println("Authentication error - ", err)
+		return err
+	}
+	r, _ := config.GetRepository(&syncObj, repoUrl, envDir)
+	err = pushEnvInitChanges(r, auth)
+	if err != nil {
+		fmt.Println("Error: Pushing env init changes -", err)
+		return err
+	}
+	return nil
+}
+
+func addLocalEnv(envDir string) {
+	// check if the repo exists already.
+	// if it does not exist, create a new one locally and sync
+	if _, err := os.Stat(envDir); os.IsNotExist(err) {
+		err = os.MkdirAll(envDir, os.ModePerm)
+		if err != nil {
+			fmt.Println("Error: Creating nested directories - ", err)
+		}
+		_ = envInit(envDir)
+	}
+}
+
+func createNestedDirPath(repoName, repoUrl string) string {
+	var dirPath string
+	if repoUrl != "" {
+		dirPathElem := strings.FieldsFunc(repoUrl, func(r rune) bool {
+			return r == ':' || r == '/' || r == '@'
+		})
+		dirPathElem[len(dirPathElem)-1] = strings.Split(dirPathElem[len(dirPathElem)-1], ".")[0]
+		dirPath = filepath.Join(common.EnvDir, strings.Join(dirPathElem[1:], string(os.PathSeparator)))
+	} else {
+		dirPath = filepath.Join(common.EnvDir, repoName)
+	}
+	return dirPath
 }
