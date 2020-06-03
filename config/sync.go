@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/pkg/errors"
 	"if0/common"
 	"if0/common/sync"
@@ -13,8 +14,8 @@ import (
 )
 
 var (
-	GitRepoSync = GitSync
-	repoUrl = getRepoUrl
+	GitRepoSync          = GitSync
+	repoUrl              = getRepoUrl
 	checkForLocalChanges = localChanges
 )
 
@@ -26,7 +27,7 @@ func RepoSync() error {
 		return errors.New("REMOTE_STORAGE is not set.")
 	}
 	syncObj := sync.Sync{}
-	err := GitRepoSync(&syncObj, remoteStorage, true)
+	err := GitRepoSync(&syncObj, remoteStorage, common.If0Dir)
 	if err != nil {
 		fmt.Println("Error:Syncing external repo - ", err)
 		return err
@@ -34,38 +35,13 @@ func RepoSync() error {
 	return nil
 }
 
-func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
-	var dir string
-	if if0Repo {
-		dir = common.If0Dir
-	} else {
-		dir = repo
+func GitSync(syncObj sync.SyncOps, repo string, dir string) error {
+	// get repository (git init, remote add; or open an existing repository)
+	r, err := GetRepository(syncObj, repo, dir)
+	if err != nil {
+		return err
 	}
-
-	// check if the repo is already present
-	// if not, do a `git init`, and `git remote add origin repo`
-	r := &git.Repository{}
-	if _, err := os.Stat(filepath.Join(dir, git.GitDirName)); os.IsNotExist(err) && if0Repo {
-		// git init
-		r, err = syncObj.GitInit(dir)
-		if err != nil {
-			return err
-		}
-
-		// git remote add <repo>
-		err = syncObj.AddRemote(repo, r)
-		if err != nil {
-			return err
-		}
-	} else {
-		// open the existing repo at ~/.if0
-		r, err = syncObj.Open(dir)
-		if err != nil {
-			fmt.Println("Error: Opening repository - ", err)
-			return err
-		}
-		repo = repoUrl(r)
-	}
+	repo = repoUrl(r)
 
 	// get authorization
 	// if the git sync is via HTTPS, then fetch username-password credentials
@@ -99,22 +75,57 @@ func GitSync(syncObj sync.SyncOps, repo string, if0Repo bool) error {
 	}
 
 	if auto {
-		fmt.Println("Pushing the local changes")
-		w, err := syncObj.GetWorktree(r)
+		err = syncChanges(syncObj, r, auth)
 		if err != nil {
-			fmt.Println("Worktree Error: ", err)
-		}
-		// git commit
-		err = syncObj.Commit(w)
-		if err != nil {
-			fmt.Println("Error: Committing changes - ", err)
-		}
-		// git push
-		err = syncObj.Push(auth, r)
-		if err != nil {
-			fmt.Println("Error: Pushing changes - ", err)
 			return err
 		}
+	}
+	return nil
+}
+
+func GetRepository(syncObj sync.SyncOps, repo string, dir string) (*git.Repository, error) {
+	r := &git.Repository{}
+	// check if the repo is already present
+	// if not, do a `git init`, and `git remote add origin repo`
+	if _, err := os.Stat(filepath.Join(dir, git.GitDirName)); os.IsNotExist(err) && repo != "" {
+		// git init
+		r, err = syncObj.GitInit(dir)
+		if err != nil {
+			return nil, err
+		}
+
+		// git remote add <repo>
+		err = syncObj.AddRemote(repo, r)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// open the existing repo at ~/.if0
+		r, err = syncObj.Open(dir)
+		if err != nil {
+			fmt.Println("Error: Opening repository - ", err)
+			return nil, err
+		}
+	}
+	return r, nil
+}
+
+func syncChanges(syncObj sync.SyncOps, r *git.Repository, auth transport.AuthMethod) error {
+	fmt.Println("Pushing the local changes")
+	w, err := syncObj.GetWorktree(r)
+	if err != nil {
+		fmt.Println("Worktree Error: ", err)
+	}
+	// git commit
+	err = syncObj.Commit(w)
+	if err != nil {
+		fmt.Println("Error: Committing changes - ", err)
+	}
+	// git push
+	err = syncObj.Push(auth, r)
+	if err != nil {
+		fmt.Println("Error: Pushing changes - ", err)
+		return err
 	}
 	return nil
 }
