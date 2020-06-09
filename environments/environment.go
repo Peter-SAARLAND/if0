@@ -22,9 +22,9 @@ var (
 
 func AddEnv(addEnvArgs []string) error {
 	var repoName, repoUrl string
-	repoName = addEnvArgs[1]
-	if len(addEnvArgs) > 2 {
-		repoUrl = addEnvArgs[2]
+	repoName = addEnvArgs[0]
+	if len(addEnvArgs) > 1 {
+		repoUrl = addEnvArgs[1]
 	}
 	config.ReadConfigFile(common.If0Default)
 	gitlabToken := config.GetEnvVariable("GL_TOKEN")

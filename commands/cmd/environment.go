@@ -107,5 +107,5 @@ func getEnvDir(args []string) string {
 }
 
 func init() {
-	rootCmd.AddCommand(environmentCmd)
+	//rootCmd.AddCommand(environmentCmd)
 }
