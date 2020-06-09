@@ -49,11 +49,10 @@ var environmentCmd = &cobra.Command{
 		case addArg:
 			if len(args) < 2 {
 				fmt.Println("Please provide valid arguments.")
-				fmt.Println("example command: if0 environment add git@gitlab.com:abc/def.git")
+				fmt.Println("example command: if0 environment add repo-name [git@gitlab.com:repo-name.git]")
 				return
 			}
-			repoUrl := args[1]
-			err := environments.AddEnv(repoUrl)
+			err := environments.AddEnv(args)
 			if err != nil {
 				fmt.Println("Error: Adding repo - ", err)
 				return

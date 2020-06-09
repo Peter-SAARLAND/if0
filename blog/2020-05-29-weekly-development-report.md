@@ -1,5 +1,5 @@
 
-# Development Report (22.05.2020)
+# Development Report (29.05.2020)
 
 ## Requirements
 1. Check for certain necessary .env files after env add

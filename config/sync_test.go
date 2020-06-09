@@ -77,7 +77,7 @@ func TestGitSyncAuthError(t *testing.T) {
 	repoUrl = func(r *git.Repository) string {
 		return "url"
 	}
-	err := GitSync(testSyncObj, "http://sample-storage", true)
+	err := GitSync(testSyncObj, "http://sample-storage", "dir")
 	assert.EqualError(t, err, "test-auth-error")
 }
 
@@ -91,7 +91,7 @@ func TestGitSyncInitError(t *testing.T) {
 		return "url"
 	}
 	testSyncObj.On("GitInit").Return(&git.Repository{}, errors.New("test-init-error"))
-	err := GitSync(testSyncObj, "http://sample-storage", true)
+	err := GitSync(testSyncObj, "http://sample-storage", "dir")
 	assert.EqualError(t, err, "test-init-error")
 }
 
@@ -101,7 +101,7 @@ func TestGitSyncRemoteError(t *testing.T) {
 	_ = os.RemoveAll(common.If0Dir)
 	testSyncObj.On("GitInit").Return(&git.Repository{}, nil)
 	testSyncObj.On("AddRemote").Return(errors.New("test-remote-error"))
-	err := GitSync(testSyncObj, "http://sample-storage", true)
+	err := GitSync(testSyncObj, "http://sample-storage", "dir")
 	assert.EqualError(t, err, "test-remote-error")
 }
 
@@ -113,7 +113,7 @@ func TestRepoSyncNoRemoteStorage(t *testing.T) {
 
 func TestRepoSyncError(t *testing.T) {
 	SetEnvVariable("REMOTE_STORAGE", "http://sample-storage")
-	GitRepoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
+	GitRepoSync = func(syncObj sync.SyncOps, repo string, dir string) error {
 		return errors.New("test-repo-sync-error")
 	}
 	err := RepoSync()
@@ -141,6 +141,6 @@ func TestGitSync(t *testing.T) {
 	testSyncObj.On("AddFile").Return(nil)
 	testSyncObj.On("Commit").Return(nil)
 	testSyncObj.On("Push").Return(nil)
-	err := GitSync(testSyncObj, "http://sample-storage", false)
+	err := GitSync(testSyncObj, "http://sample-storage", "dir")
 	assert.Nil(t, err)
 }

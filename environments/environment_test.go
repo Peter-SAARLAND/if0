@@ -17,33 +17,19 @@ func TestAddEnvAuthError(t *testing.T) {
 	getAuth = func(authObj sync.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, errors.New("test-auth-error")
 	}
-	err := AddEnv("sample_repo")
+	err := AddEnv([]string{"add", "sample_repo", "repo-url"})
 	assert.EqualError(t, err, "test-auth-error")
-}
-
-func TestAddEnvCloneError(t *testing.T) {
-	getAuth = func(authObj sync.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
-		return nil, nil
-	}
-	clone = func(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-		return nil, errors.New("test-clone-error")
-	}
-	err := AddEnv("sample_repo")
-	assert.EqualError(t, err, "test-clone-error")
 }
 
 func TestAddEnvClone(t *testing.T) {
 	getAuth = func(authObj sync.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, nil
 	}
-	clone = func(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-		r := &git.Repository{}
-		return r, nil
-	}
+
 	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
 		return nil
 	}
-	err := AddEnv("sample_repo")
+	err := AddEnv([]string{"add", "sample_repo", "repo-url"})
 	assert.Nil(t, err)
 }
 
@@ -56,7 +42,7 @@ func TestSyncEnvError(t *testing.T) {
 	common.EnvDir = "testdata"
 	_ = os.Mkdir("testdata", 0644)
 	_ = os.Mkdir(filepath.Join("testdata", "sample-repo"), 0644)
-	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
+	repoSync = func(syncObj sync.SyncOps, repo string, dir string) error {
 		return errors.New("test-repo-sync-error")
 	}
 	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
@@ -67,7 +53,7 @@ func TestSyncEnv(t *testing.T) {
 	common.EnvDir = "testdata"
 	_ = os.Mkdir("testdata", 0644)
 	_ = os.Mkdir(filepath.Join("testdata", "sample-repo"), 0644)
-	repoSync = func(syncObj sync.SyncOps, repo string, if0Repo bool) error {
+	repoSync = func(syncObj sync.SyncOps, repo string, dir string) error {
 		return nil
 	}
 	err := SyncEnv(filepath.Join("testdata", "sample-repo"))
@@ -96,7 +82,7 @@ func TestEnvInit(t *testing.T) {
 	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
 		return nil
 	}
-	err := envInit(nil, nil, "sample-repo")
+	err := envInit(filepath.Join("testdata", "sample-repo"))
 	assert.Nil(t, err)
 	assert.DirExists(t, filepath.Join("testdata", "sample-repo", ".ssh"))
 	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "zero.env"))
