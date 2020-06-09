@@ -76,23 +76,3 @@ func TestLoadEnv(t *testing.T) {
 	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
 }
 
-func TestEnvInit(t *testing.T) {
-	common.EnvDir = "testdata"
-	common.If0Default = filepath.Join("testdata", "if0.env")
-	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
-		return nil
-	}
-	err := envInit(filepath.Join("testdata", "sample-repo"))
-	assert.Nil(t, err)
-	assert.DirExists(t, filepath.Join("testdata", "sample-repo", ".ssh"))
-	assert.FileExists(t, filepath.Join("testdata", "sample-repo", "zero.env"))
-	assert.FileExists(t, filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
-	os.RemoveAll(filepath.Join("testdata", "sample-repo", ".ssh"))
-	os.Remove(filepath.Join("testdata", "sample-repo", "zero.env"))
-	os.Remove(filepath.Join("testdata", "sample-repo", ".gitlab-ci.yml"))
-}
-
-func TestGetShipmateUrl(t *testing.T) {
-	common.If0Default = filepath.Join("testdata", "if0.env")
-	assert.Equal(t, "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml", getShipmateUrl())
-}
