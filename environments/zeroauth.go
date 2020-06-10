@@ -32,7 +32,6 @@ func generateHashCmd(seq string) (string, error) {
 	// htpasswd -nbB admin 'superpassword' | cut -d ":" -f 2
 	command := "htpasswd -nbB admin " + "'"+seq+"'" + "| cut -d \":\" -f 2"
 	cmd := exec.Command("bash", "-c", command)
-	fmt.Println(cmd)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println("err", err, string(out))
