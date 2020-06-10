@@ -57,13 +57,17 @@ func envInit(envPath string) error {
 func createZeroFile(envPath string) {
 	f := createFile(filepath.Join(envPath, "zero.env"))
 	defer f.Close()
-	_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
 	pwd := generateRandSeq()
-	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
 	hash, err := generateHashCmd(pwd)
 	if runtime.GOOS == "windows" || hash == "" || err != nil {
-		hash = generateHashDocker(pwd)
+		hash, err = generateHashDocker(pwd)
+		if err != nil {
+			fmt.Println("Error: Could not create htpasswd hash -", err)
+			return
+		}
 	}
+	_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
+	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
 	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
 }
 
