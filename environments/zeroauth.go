@@ -10,6 +10,7 @@ import (
 	"io"
 	"math/rand"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -30,19 +31,22 @@ func generateRandSeq() string {
 
 func generateHashCmd(seq string) (string, error) {
 	// htpasswd -nbB admin 'superpassword' | cut -d ":" -f 2
-	command := "htpasswd -nbB admin " + "'"+seq+"'" + "| cut -d \":\" -f 2"
-	cmd := exec.Command("bash", "-c", command)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		fmt.Println("err", err, string(out))
-		return "", err
+	if runtime.GOOS != "windows" {
+		command := "htpasswd -nbB admin " + "'"+seq+"'" + "| cut -d \":\" -f 2"
+		cmd := exec.Command("bash", "-c", command)
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			fmt.Println("Error: htpasswd - ", err, string(out))
+			return "", err
+		}
+		hash := string(out)
+		hash = strings.Replace(hash, "$", "$$", -1)
+		return hash, nil
 	}
-	hash := string(out)
-	hash = strings.Replace(hash, "$", "$$", -1)
-	return hash, nil
+	return "", nil
 }
 
-func generateHashDocker(seq string) string {
+func generateHashDocker(seq string) (string, error) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -58,29 +62,25 @@ func generateHashDocker(seq string) string {
 		AttachStderr: true,
 	}, nil, nil, "htpwd")
 	if err != nil {
-		fmt.Println("Error: ContainerCreate - ", err)
-		return ""
+		return "", err
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		fmt.Println("Error: ContainerStart - ", err)
-		return ""
+		return "", err
 	}
 
 	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			fmt.Println("Error: ContainerWait - ", err)
-			return ""
+			return "", err
 		}
 	case <-statusCh:
 	}
 
 	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
 	if err != nil {
-		fmt.Println("Error: ContainerLogs - ", err)
-		return ""
+		return "", err
 	}
 	buf := new(bytes.Buffer)
 	io.Copy(buf, out)
@@ -89,8 +89,7 @@ func generateHashDocker(seq string) string {
 
 	err = cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
 	if err != nil {
-		fmt.Println("Error: ContainerRemove - ", err)
-		return ""
+		return "", err
 	}
-	return hash
+	return hash, nil
 }
