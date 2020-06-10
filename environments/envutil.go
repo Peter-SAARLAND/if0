@@ -1,14 +1,9 @@
 package environments
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/pem"
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"golang.org/x/crypto/ssh"
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
@@ -16,6 +11,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -41,15 +37,8 @@ func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
 
 // This function checks if the environment directory contains necessary files, if not, creates them.
 func envInit(envPath string) error {
-	//envPath := filepath.Join(common.EnvDir, envName)
-	createFile(filepath.Join(envPath, "zero.env"))
-	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
-	defer f.Close()
-	if f != nil {
-		shipmateUrl := getShipmateUrl()
-		dataToWrite := fmt.Sprintf("include:\n  - remote: '%s'", shipmateUrl)
-		_, _ = f.Write([]byte(dataToWrite))
-	}
+	createZeroFile(envPath)
+	createCIFile(envPath)
 	sshDir := filepath.Join(envPath, ".ssh")
 	files, direrr := ioutil.ReadDir(sshDir)
 	// .ssh dir not present or present but no keys
@@ -63,6 +52,33 @@ func envInit(envPath string) error {
 		}
 	}
 	return nil
+}
+
+func createZeroFile(envPath string) {
+	f := createFile(filepath.Join(envPath, "zero.env"))
+	defer f.Close()
+	pwd := generateRandSeq()
+	hash, err := generateHashCmd(pwd)
+	if runtime.GOOS == "windows" || hash == "" || err != nil {
+		hash, err = generateHashDocker(pwd)
+		if err != nil {
+			fmt.Println("Error: Could not create htpasswd hash -", err)
+			return
+		}
+	}
+	_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
+	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
+	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
+}
+
+func createCIFile(envPath string) {
+	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
+	defer f.Close()
+	if f != nil {
+		shipmateUrl := getShipmateUrl()
+		dataToWrite := fmt.Sprintf("include:\n  - remote: '%s'", shipmateUrl)
+		_, _ = f.Write([]byte(dataToWrite))
+	}
 }
 
 func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
@@ -94,75 +110,6 @@ func createFile(fileName string) *os.File {
 		fmt.Println("Creating file", fileName)
 		f, _ := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
 		return f
-	}
-	return nil
-}
-
-func generateSSHKeyPair(sshDir string) error {
-	privateKeyPath := filepath.Join(sshDir, "id_rsa")
-	publicKeyPath := filepath.Join(sshDir, "id_rsa.pub")
-
-	privateKey, err := generatePrivateKey()
-	if err != nil {
-		return err
-	}
-
-	publicKeyBytes, err := generatePublicKey(&privateKey.PublicKey)
-	if err != nil {
-		return err
-	}
-
-	privateKeyBytes := encodePrivateKeyToPEM(privateKey)
-
-	err = writeKeyToFile(privateKeyBytes, privateKeyPath, 0600)
-	if err != nil {
-		return err
-	}
-
-	err = writeKeyToFile(publicKeyBytes, publicKeyPath, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func generatePrivateKey() (*rsa.PrivateKey, error) {
-	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
-	if err != nil {
-		return nil, err
-	}
-	err = privateKey.Validate()
-	if err != nil {
-		return nil, err
-	}
-	return privateKey, nil
-}
-
-func generatePublicKey(privateKey *rsa.PublicKey) ([]byte, error) {
-	publicRsaKey, err := ssh.NewPublicKey(privateKey)
-	if err != nil {
-		return nil, err
-	}
-	pubKeyBytes := ssh.MarshalAuthorizedKey(publicRsaKey)
-	return pubKeyBytes, nil
-}
-
-func encodePrivateKeyToPEM(privateKey *rsa.PrivateKey) []byte {
-	privateDER := x509.MarshalPKCS1PrivateKey(privateKey)
-	privateBlock := pem.Block{
-		Type:    "RSA PRIVATE KEY",
-		Headers: nil,
-		Bytes:   privateDER,
-	}
-	privatePEM := pem.EncodeToMemory(&privateBlock)
-	return privatePEM
-}
-
-func writeKeyToFile(keyBytes []byte, file string, perm os.FileMode) error {
-	fmt.Printf("Creating ssh key %s\n", file)
-	err := ioutil.WriteFile(file, keyBytes, perm)
-	if err != nil {
-		return err
 	}
 	return nil
 }
