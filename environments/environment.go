@@ -71,18 +71,18 @@ func Dash1Plan(envDir string) error {
 	return nil
 }
 
-func ZeroProvision(envDir string) error {
+func ZeroPlatform(envDir string) error {
 	envName := strings.Split(filepath.Base(envDir), ".")[0]
-	err := dockercmd.MakeProvision(envName)
+	err := dockercmd.MakePlatform(envName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func Dash1Zero(envDir string) error {
+func Dash1Infrastructure(envDir string) error {
 	envName := strings.Split(filepath.Base(envDir), ".")[0]
-	err := dockercmd.MakeZero(envName)
+	err := dockercmd.MakeInfrastructure(envName)
 	if err != nil {
 		return err
 	}
