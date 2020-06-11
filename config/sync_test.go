@@ -21,7 +21,7 @@ func (m *mockSync) GetWorktree(r *git.Repository) (*git.Worktree, error) {
 	return args.Get(0).(*git.Worktree), args.Error(1)
 }
 
-func (m *mockSync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
+func (m *mockSync) Clone(repoUrl, localRepoPath string, auth transport.AuthMethod) (*git.Repository, error) {
 	args := m.Called()
 	return args.Get(0).(*git.Repository), args.Error(1)
 }

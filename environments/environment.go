@@ -18,6 +18,7 @@ var (
 	syncObj  = sync.Sync{}
 	getAuth  = sync.GetSyncAuth
 	repoSync = config.GitRepoSync
+	clone    = syncObj.Clone
 )
 
 func AddEnv(addEnvArgs []string) error {

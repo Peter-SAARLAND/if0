@@ -19,11 +19,34 @@ var (
 	pushEnvInitChanges = pushInitChanges
 )
 
-func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
+func cloneEnv(repoUrl, envDir string) (*git.Repository, error) {
+	// get authorization
+	authObj := sync.Auth{}
+	auth, err := getAuth(&authObj, repoUrl)
+	if err != nil {
+		fmt.Println("Authentication error - ", err)
+		return nil, err
+	}
+
+	r, err := clone(repoUrl, envDir, auth)
+	if err != nil {
+		if err.Error() == "remote repository is empty" {
+			r, err = cloneEmptyRepo(repoUrl, envDir)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	return r, nil
+}
+
+func cloneEmptyRepo(remoteStorage, envDir string) (*git.Repository, error) {
 	syncObj := sync.Sync{}
-	dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
-	dirPath := filepath.Join(common.EnvDir, dirName)
-	r, err := syncObj.GitInit(dirPath)
+	//dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
+	//dirPath := filepath.Join(common.EnvDir, dirName)
+	r, err := syncObj.GitInit(envDir)
 	if err != nil {
 		return nil, err
 	}
@@ -130,17 +153,19 @@ func getShipmateUrl() string {
 
 func createLocalEnv(repoName string, repoUrl string) error {
 	envDir := createNestedDirPath(repoName, repoUrl)
-	addLocalEnv(envDir)
 	// if a remote repository (empty) url is provided, sync the changes
 	if repoUrl != "" {
+		_, _ = cloneEnv(repoUrl, envDir)
+		addLocalEnv(envDir)
 		err := syncLocalEnvChanges(repoUrl, envDir)
 		if err != nil {
 			return err
 		}
 	} else {
+		addLocalEnv(envDir)
 		fmt.Println("No remote repository url was found for sync. "+
 			"The environment has been created locally at ", envDir)
-		fmt.Println("To sync the local changes, run `if0 env add repo-name repo-url`")
+		fmt.Println("To sync the local changes, run `if0 add repo-name repo-url`")
 	}
 	return nil
 }
