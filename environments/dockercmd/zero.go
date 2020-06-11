@@ -7,7 +7,7 @@ import (
 )
 
 // This function used to provision the platform
-func MakeProvision(envName string) error {
+func MakePlatform(envName string) error {
 	//binding mounts
 	mounts := addMounts(envName)
 	if mounts == nil {
@@ -19,14 +19,14 @@ func MakeProvision(envName string) error {
 
 	containerConfig := &container.Config{
 		Image: zeroImage,
-		Cmd:   []string{"make", "provision"},
+		Cmd:   []string{"make", "platform"},
 		Tty:   true,
 		Env:   []string{"IF0_ENVIRONMENT=" + envName},
 	}
 	containerName := "zero-" + envName
 	err := dockerRun(containerConfig, hostConfig, containerName, zeroImage)
 	if err != nil {
-		fmt.Println("Error: MakeProvision - ", err)
+		fmt.Println("Error: MakePlatform - ", err)
 		return err
 	}
 	return nil
