@@ -29,7 +29,7 @@ var provisionCmd = &cobra.Command{
 	Long: `Example: if0 provision [env-name]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		envDir := getEnvDir(args)
-		err := environments.ZeroProvision(envDir)
+		err := environments.ZeroPlatform(envDir)
 		if err != nil {
 			fmt.Println("Error: zero provision - ", err)
 			return

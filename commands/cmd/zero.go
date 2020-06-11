@@ -17,17 +17,22 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"if0/environments"
 )
 
 // zeroCmd represents the zero command
 var zeroCmd = &cobra.Command{
 	Use:   "zero",
-	Short: "A brief description of your command",
+	Short: "",
 	Long: `Example: if0 zero [env-name]`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("zero called")
+		envDir := getEnvDir(args)
+		err := environments.Dash1Infrastructure(envDir)
+		if err != nil {
+			fmt.Println("Error: dash1 zero - ", err)
+			return
+		}
 	},
 }
 

@@ -14,13 +14,11 @@ func MakePlan(envName string) error {
 	return dash1make(envName, command)
 }
 
-// This function used to provision the platform
-func MakeZero(envName string) error {
-	command := []string{"make", "zero"}
+func MakeInfrastructure(envName string) error {
+	command := []string{"make", "infrastructure"}
 	return dash1make(envName, command)
 }
 
-// This function used to provision the platform
 func MakeDestroy(envName string) error {
 	command := []string{"make", "destroy"}
 	return dash1make(envName, command)

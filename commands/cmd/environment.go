@@ -73,14 +73,14 @@ var environmentCmd = &cobra.Command{
 			}
 		case provisionArg:
 			envDir := getEnvDir(args)
-			err := environments.ZeroProvision(envDir)
+			err := environments.ZeroPlatform(envDir)
 			if err != nil {
 				fmt.Println("Error: zero provision - ", err)
 				return
 			}
 		case zeroArg:
 			envDir := getEnvDir(args)
-			err := environments.Dash1Zero(envDir)
+			err := environments.Dash1Infrastructure(envDir)
 			if err != nil {
 				fmt.Println("Error: dash1 zero - ", err)
 				return
