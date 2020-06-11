@@ -3,10 +3,13 @@ package gitlabclient
 import (
 	"fmt"
 	"github.com/xanzy/go-gitlab"
+	"if0/common"
+	"if0/config"
 )
 
 func CreateProject(projectName, gitlabToken string) (string, error) {
-	git, err := gitlab.NewClient(gitlabToken)
+	clientOptions := gitlab.WithBaseURL(getIf0RegistryUrl())
+	git, err := gitlab.NewClient(gitlabToken, clientOptions)
 	if err != nil {
 		fmt.Println("Error: Creating gitlab client -", err)
 		return "", err
@@ -23,4 +26,9 @@ func CreateProject(projectName, gitlabToken string) (string, error) {
 	}
 	fmt.Println("Project created successfully at ", project.HTTPURLToRepo)
 	return project.SSHURLToRepo, nil
+}
+
+func getIf0RegistryUrl() string {
+	config.ReadConfigFile(common.If0Default)
+	return config.GetEnvVariable("IF0_REGISTRY_URL")
 }
