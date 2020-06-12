@@ -91,7 +91,7 @@ func Dash1Infrastructure(envDir string) error {
 }
 
 func Dash1Destroy(envDir string) error {
-	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	envName := strings.Replace(envDir, common.EnvDir, "", 1)
 	err := dockercmd.MakeDestroy(envName)
 	if err != nil {
 		return err
