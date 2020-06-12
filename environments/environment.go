@@ -64,7 +64,7 @@ func SyncEnv(envDir string) error {
 }
 
 func Dash1Plan(envDir string) error {
-	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	envName := strings.Replace(envDir, common.EnvDir, "", 1)
 	err := dockercmd.MakePlan(envName)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func Dash1Plan(envDir string) error {
 }
 
 func ZeroPlatform(envDir string) error {
-	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	envName := strings.Replace(envDir, common.EnvDir, "", 1)
 	err := dockercmd.MakePlatform(envName)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func ZeroPlatform(envDir string) error {
 }
 
 func Dash1Infrastructure(envDir string) error {
-	envName := strings.Split(filepath.Base(envDir), ".")[0]
+	envName := strings.Replace(envDir, common.EnvDir, "", 1)
 	err := dockercmd.MakeInfrastructure(envName)
 	if err != nil {
 		return err
