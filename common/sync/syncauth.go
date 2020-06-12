@@ -92,7 +92,10 @@ func getSSHAuth(authObj AuthOps) (*gitssh.PublicKeys, error) {
 			return nil, err
 		}
 	}
-	auth := &gitssh.PublicKeys{User: "git", Signer: signer}
+	auth := &gitssh.PublicKeys{User: "git", Signer: signer,
+		HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}}
 	return auth, nil
 }
 

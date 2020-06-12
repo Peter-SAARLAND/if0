@@ -172,12 +172,12 @@ func createLocalEnv(repoName string, repoUrl string) error {
 
 func createGLProject(repoName, glToken string) error {
 	// creating a private project in gitlab
-	sshRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
+	sshRepoUrl, httpRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
 	if err != nil {
 		return err
 	}
 	// adding the environment locally
-	envDir := createNestedDirPath(repoName, sshRepoUrl)
+	envDir := createNestedDirPath(repoName, httpRepoUrl)
 	addLocalEnv(envDir)
 	// syncing local changes with the private project
 	err = syncLocalEnvChanges(sshRepoUrl, envDir)
