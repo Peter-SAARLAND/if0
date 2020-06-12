@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
+	"strings"
 )
 
 // This function used to provision the platform
@@ -23,7 +24,9 @@ func MakePlatform(envName string) error {
 		Tty:   true,
 		Env:   []string{"IF0_ENVIRONMENT=" + envName},
 	}
-	containerName := "zero-" + envName
+	envSplit := strings.Split(envName, "/")
+	env := envSplit[len(envSplit)-1]
+	containerName := "zero-" + env
 	err := dockerRun(containerConfig, hostConfig, containerName, zeroImage)
 	if err != nil {
 		fmt.Println("Error: MakePlatform - ", err)

@@ -30,7 +30,7 @@ var infraCmd = &cobra.Command{
 		envDir := getEnvDir(args)
 		err := environments.Dash1Infrastructure(envDir)
 		if err != nil {
-			fmt.Println("Error: dash1 zero - ", err)
+			fmt.Println("Error: dash1 infrastructure - ", err)
 			return
 		}
 	},

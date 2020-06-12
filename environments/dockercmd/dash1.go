@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/docker/docker/api/types/container"
+	"strings"
 )
 
 // This function is used to start a dash1 container, and run `make plan` inside the container.
@@ -40,7 +41,9 @@ func dash1make(envName string, command []string) error {
 		Tty:   true,
 		Env:   []string{"IF0_ENVIRONMENT=" + envName},
 	}
-	containerName := "dash1-" + envName
+	envSplit := strings.Split(envName, "/")
+	env := envSplit[len(envSplit)-1]
+	containerName := "dash1-" + env
 	err := dockerRun(containerConfig, hostConfig, containerName, dash1Image)
 	if err != nil {
 		return err
