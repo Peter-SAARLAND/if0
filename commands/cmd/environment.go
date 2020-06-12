@@ -98,10 +98,10 @@ var environmentCmd = &cobra.Command{
 
 func getEnvDir(args []string) string {
 	var envDir string
-	if len(args) < 2 {
+	if len(args) < 1 {
 		envDir, _ = os.Getwd()
 	} else {
-		envDir = filepath.Join(common.EnvDir, args[1])
+		envDir = filepath.Join(common.EnvDir, args[0])
 	}
 	return envDir
 }

@@ -7,12 +7,12 @@ import (
 	"if0/config"
 )
 
-func CreateProject(projectName, gitlabToken string) (string, error) {
+func CreateProject(projectName, gitlabToken string) (string, string, error) {
 	clientOptions := gitlab.WithBaseURL(getIf0RegistryUrl())
 	git, err := gitlab.NewClient(gitlabToken, clientOptions)
 	if err != nil {
 		fmt.Println("Error: Creating gitlab client -", err)
-		return "", err
+		return "", "", err
 	}
 	projectOptions := &gitlab.CreateProjectOptions{
 		Name:                  gitlab.String(projectName),
@@ -22,10 +22,10 @@ func CreateProject(projectName, gitlabToken string) (string, error) {
 	project, _, err := git.Projects.CreateProject(projectOptions)
 	if err != nil {
 		fmt.Println("Error: Creating GitLab project -", err)
-		return "", err
+		return "", "", err
 	}
 	fmt.Println("Project created successfully at ", project.HTTPURLToRepo)
-	return project.SSHURLToRepo, nil
+	return project.SSHURLToRepo, project.HTTPURLToRepo, nil
 }
 
 func getIf0RegistryUrl() string {
