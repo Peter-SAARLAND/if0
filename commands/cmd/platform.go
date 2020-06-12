@@ -17,25 +17,26 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"if0/environments"
+
+	"github.com/spf13/cobra"
 )
 
-// zeroCmd represents the zero command
-var zeroCmd = &cobra.Command{
-	Use:   "zero",
-	Short: "",
-	Long: `Example: if0 zero [env-name]`,
+// platformCmd represents the provision command
+var platformCmd = &cobra.Command{
+	Use:   "platform",
+	Short: "A brief description of your command",
+	Long: `Example: if0 platform [env-name]`,
 	Run: func(cmd *cobra.Command, args []string) {
 		envDir := getEnvDir(args)
-		err := environments.Dash1Infrastructure(envDir)
+		err := environments.ZeroPlatform(envDir)
 		if err != nil {
-			fmt.Println("Error: dash1 zero - ", err)
+			fmt.Println("Error: zero provision - ", err)
 			return
 		}
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(zeroCmd)
+	rootCmd.AddCommand(platformCmd)
 }
