@@ -1,13 +1,5 @@
 include:
-  - remote: 'https://gitlab.com/peter.saarland/scratch/-/raw/master/ci/templates/version.gitlab-ci.yml'
-  - remote: 'https://gitlab.com/peter.saarland/scratch/-/raw/master/ci/templates/release.gitlab-ci.yml'
-
-stages:
-  - version
-  - dep
-  - build
-  - test
-  - release
+  - remote: "https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml"
 
 variables:
   DOCKER_TLS_CERTDIR: ""
@@ -48,8 +40,8 @@ compile:
   except:
   - tags
 
-include:
-  - template: Container-Scanning.gitlab-ci.yml
+#include:
+#  - template: Container-Scanning.gitlab-ci.yml
 
 unit-tests:
   image: golang:1.14

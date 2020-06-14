@@ -19,11 +19,34 @@ var (
 	pushEnvInitChanges = pushInitChanges
 )
 
-func cloneEmptyRepo(remoteStorage string) (*git.Repository, error) {
+func cloneEnv(repoUrl, envDir string) (*git.Repository, error) {
+	// get authorization
+	authObj := sync.Auth{}
+	auth, err := getAuth(&authObj, repoUrl)
+	if err != nil {
+		fmt.Println("Authentication error - ", err)
+		return nil, err
+	}
+
+	r, err := clone(repoUrl, envDir, auth)
+	if err != nil {
+		if err.Error() == "remote repository is empty" {
+			r, err = cloneEmptyRepo(repoUrl, envDir)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	return r, nil
+}
+
+func cloneEmptyRepo(remoteStorage, envDir string) (*git.Repository, error) {
 	syncObj := sync.Sync{}
-	dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
-	dirPath := filepath.Join(common.EnvDir, dirName)
-	r, err := syncObj.GitInit(dirPath)
+	//dirName := strings.Split(filepath.Base(remoteStorage), ".")[0]
+	//dirPath := filepath.Join(common.EnvDir, dirName)
+	r, err := syncObj.GitInit(envDir)
 	if err != nil {
 		return nil, err
 	}
@@ -57,18 +80,20 @@ func envInit(envPath string) error {
 func createZeroFile(envPath string) {
 	f := createFile(filepath.Join(envPath, "zero.env"))
 	defer f.Close()
-	pwd := generateRandSeq()
-	hash, err := generateHashCmd(pwd)
-	if runtime.GOOS == "windows" || hash == "" || err != nil {
-		hash, err = generateHashDocker(pwd)
-		if err != nil {
-			fmt.Println("Error: Could not create htpasswd hash -", err)
-			return
+	if f != nil {
+		pwd := generateRandSeq()
+		hash, err := generateHashCmd(pwd)
+		if runtime.GOOS == "windows" || hash == "" || err != nil {
+			hash, err = generateHashDocker(pwd)
+			if err != nil {
+				fmt.Println("Error: Could not create htpasswd hash -", err)
+				return
+			}
 		}
+		_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
+		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
+		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
 	}
-	_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
-	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
-	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
 }
 
 func createCIFile(envPath string) {
@@ -130,29 +155,31 @@ func getShipmateUrl() string {
 
 func createLocalEnv(repoName string, repoUrl string) error {
 	envDir := createNestedDirPath(repoName, repoUrl)
-	addLocalEnv(envDir)
 	// if a remote repository (empty) url is provided, sync the changes
 	if repoUrl != "" {
+		_, _ = cloneEnv(repoUrl, envDir)
+		addLocalEnv(envDir)
 		err := syncLocalEnvChanges(repoUrl, envDir)
 		if err != nil {
 			return err
 		}
 	} else {
+		addLocalEnv(envDir)
 		fmt.Println("No remote repository url was found for sync. "+
 			"The environment has been created locally at ", envDir)
-		fmt.Println("To sync the local changes, run `if0 env add repo-name repo-url`")
+		fmt.Println("To sync the local changes, run `if0 add repo-name repo-url`")
 	}
 	return nil
 }
 
 func createGLProject(repoName, glToken string) error {
 	// creating a private project in gitlab
-	sshRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
+	sshRepoUrl, httpRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
 	if err != nil {
 		return err
 	}
 	// adding the environment locally
-	envDir := createNestedDirPath(repoName, sshRepoUrl)
+	envDir := createNestedDirPath(repoName, httpRepoUrl)
 	addLocalEnv(envDir)
 	// syncing local changes with the private project
 	err = syncLocalEnvChanges(sshRepoUrl, envDir)
@@ -186,8 +213,8 @@ func addLocalEnv(envDir string) {
 		if err != nil {
 			fmt.Println("Error: Creating nested directories - ", err)
 		}
-		_ = envInit(envDir)
 	}
+	_ = envInit(envDir)
 }
 
 func createNestedDirPath(repoName, repoUrl string) string {

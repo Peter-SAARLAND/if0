@@ -6,11 +6,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport"
-	"if0/common"
 	"os"
-	"path"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -23,7 +19,7 @@ type SyncOps interface {
 	AddFile(w *git.Worktree, file string) error
 	Commit(w *git.Worktree) error
 	Push(auth transport.AuthMethod, r *git.Repository) error
-	Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error)
+	Clone(repoUrl, localRepoPath string, auth transport.AuthMethod) (*git.Repository, error)
 	GetWorktree(r *git.Repository) (*git.Worktree, error)
 }
 
@@ -100,18 +96,19 @@ func (s *Sync) Push(auth transport.AuthMethod, r *git.Repository) error {
 	return r.Push(pushOptions)
 }
 
-func (s *Sync) Clone(repoUrl string, auth transport.AuthMethod) (*git.Repository, error) {
-	repoName := strings.Split(filepath.Base(repoUrl), ".")[0]
-	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, filepath.Join(common.EnvDir, repoName))
+func (s *Sync) Clone(repoUrl string, localRepoPath string, auth transport.AuthMethod) (*git.Repository, error) {
+	//repoName := strings.Split(filepath.Base(repoUrl), ".")[0]
+	fmt.Printf("Cloning the git repository %s at %s\n", repoUrl, localRepoPath)
 	cloneOptions := &git.CloneOptions{
 		URL:      repoUrl,
 		Auth:     auth,
 		Progress: os.Stdout,
 	}
 
-	localRepoPath := filepath.Join(common.EnvDir, strings.Split(path.Base(repoUrl), ".")[0])
+	// localRepoPath := filepath.Join(common.EnvDir, strings.Split(path.Base(repoUrl), ".")[0])
 	r, err := git.PlainClone(localRepoPath, false, cloneOptions)
 	if err != nil {
+		fmt.Println("Error: Clone Repo -", err)
 		return nil, err
 	}
 	return r, nil

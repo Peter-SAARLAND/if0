@@ -85,8 +85,12 @@ func TestGetAuthSSH(t *testing.T) {
 	testObj.On("parseSSHKey").Return(nil, errors.New("ssh: this private key is passphrase protected"))
 	testObj.On("parseSSHKeyWithPassphrase").Return(signer, nil)
 	auth, err := getAuth(testObj, "git@gitlab:sample-storage")
-	expectedAuth := &gitssh.PublicKeys{User: "git", Signer: signer}
-	assert.Equal(t, auth, expectedAuth)
+	//expectedAuth := &gitssh.PublicKeys{User: "git", Signer: signer}
+	expectedAuth := &gitssh.PublicKeys{User: "git", Signer: signer,
+		HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}}
+	assert.ObjectsAreEqual(auth, expectedAuth)
 	assert.Nil(t, err)
 }
 
