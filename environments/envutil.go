@@ -80,18 +80,20 @@ func envInit(envPath string) error {
 func createZeroFile(envPath string) {
 	f := createFile(filepath.Join(envPath, "zero.env"))
 	defer f.Close()
-	pwd := generateRandSeq()
-	hash, err := generateHashCmd(pwd)
-	if runtime.GOOS == "windows" || hash == "" || err != nil {
-		hash, err = generateHashDocker(pwd)
-		if err != nil {
-			fmt.Println("Error: Could not create htpasswd hash -", err)
-			return
+	if f != nil {
+		pwd := generateRandSeq()
+		hash, err := generateHashCmd(pwd)
+		if runtime.GOOS == "windows" || hash == "" || err != nil {
+			hash, err = generateHashDocker(pwd)
+			if err != nil {
+				fmt.Println("Error: Could not create htpasswd hash -", err)
+				return
+			}
 		}
+		_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
+		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
+		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
 	}
-	_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
-	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
-	_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
 }
 
 func createCIFile(envPath string) {
@@ -211,8 +213,8 @@ func addLocalEnv(envDir string) {
 		if err != nil {
 			fmt.Println("Error: Creating nested directories - ", err)
 		}
-		_ = envInit(envDir)
 	}
+	_ = envInit(envDir)
 }
 
 func createNestedDirPath(repoName, repoUrl string) string {
