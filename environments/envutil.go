@@ -230,3 +230,43 @@ func createNestedDirPath(repoName, repoUrl string) string {
 	}
 	return dirPath
 }
+
+
+// helper functions for `if0 list`
+func visit(p string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+	if info.IsDir() && (info.Name() == ".git" || info.Name() == ".ssh") {
+		return filepath.SkipDir
+	}
+	hasZeroEnv := checkForZeroEnv(p)
+	if info.IsDir() && hasZeroEnv {
+		fmt.Printf("Local repository: %s. ", p)
+		repoUrl := getRepoUrl(p)
+		if repoUrl == "" {
+			repoUrl = "remote repository does not exist"
+		}
+		fmt.Println("Repository URL: ", repoUrl)
+	}
+	return nil
+}
+
+func checkForZeroEnv(dir string) bool {
+	//fmt.Println("dir:", dir)
+	zeroPath := filepath.Join(dir, "zero.env")
+	if _, err := os.Stat(zeroPath); os.IsNotExist(err) {
+		return false
+	}
+	return true
+}
+
+func getRepoUrl(envDir string) string {
+	// open the existing repo at ~/.if0
+	r, err := syncObj.Open(envDir)
+	if err != nil {
+		return ""
+	}
+	remotes, _ := r.Remote("origin")
+	return remotes.Config().URLs[0]
+}

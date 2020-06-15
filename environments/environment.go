@@ -99,16 +99,26 @@ func Dash1Destroy(envDir string) error {
 	return nil
 }
 
-func loadEnv(envDir string) error {
-	fmt.Println("Reading .env files from", envDir)
-	envConfig, err := readAllEnvFiles(envDir)
+func ListEnv() {
+	err := filepath.Walk(common.EnvDir, visit)
 	if err != nil {
-		return err
+		fmt.Println("Error: Listing environments -", err)
 	}
-	for k, v := range envConfig {
-		config.SetEnvVariable(k, v.(string))
+}
+
+func InspectEnv(envDir string) {
+	fmt.Println("Configuration for zero environment:", envDir)
+	allConfig, err := readAllEnvFiles(envDir)
+	if err != nil {
+		fmt.Println("Error: Inspect environment -", err)
 	}
-	return nil
+	if len(allConfig) == 0 {
+		fmt.Println("No configuration found in *.env files")
+		return
+	}
+	for c, val := range allConfig {
+		fmt.Println(strings.ToUpper(c)+"="+val.(string))
+	}
 }
 
 func readAllEnvFiles(dirPath string) (map[string]interface{}, error) {
