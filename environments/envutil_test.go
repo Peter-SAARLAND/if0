@@ -52,3 +52,19 @@ func TestAddLocalEnv(t *testing.T) {
 	os.RemoveAll(filepath.Join("testdata", "gitlab.com"))
 }
 
+func TestReadEnvNoFiles(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	os.Remove(filepath.Join("testdata", "sample-repo", "if0.env"))
+	allConfig, err := readAllEnvFiles(common.EnvDir)
+	assert.EqualError(t, err, "no .env files found")
+	assert.Nil(t, allConfig)
+}
+
+func TestRealAllEnv(t *testing.T) {
+	common.EnvDir = filepath.Join("testdata", "sample-repo")
+	f, _ := os.OpenFile(filepath.Join("testdata", "sample-repo", "if0.env"), os.O_CREATE|os.O_RDWR, 0644)
+	defer f.Close()
+	_, _ = f.Write([]byte("IF0_ENVIRONMENT=sample-repo"))
+	allConfig, _ := readAllEnvFiles(common.EnvDir)
+	assert.Equal(t, allConfig["if0_environment"], "sample-repo")
+}

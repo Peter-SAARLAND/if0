@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"if0/common"
 	"if0/common/sync"
-	"if0/config"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -60,19 +60,25 @@ func TestSyncEnv(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestLoadEnvNoFiles(t *testing.T) {
-	common.EnvDir = filepath.Join("testdata", "sample-repo")
-	os.Remove(filepath.Join("testdata", "sample-repo", "if0.env"))
-	err := loadEnv(common.EnvDir)
-	assert.EqualError(t, err, "no .env files found")
+func TestListEnv(t *testing.T) {
+	common.EnvDir = "testdata"
+	stdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	ListEnv()
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = stdout
+	assert.Contains(t, string(out), "Local repository: testdata\\test-env-1. Repository URL:  remote repository does not exist")
 }
 
-func TestLoadEnv(t *testing.T) {
-	common.EnvDir = filepath.Join("testdata", "sample-repo")
-	f, _ := os.OpenFile(filepath.Join("testdata", "sample-repo", "if0.env"), os.O_CREATE|os.O_RDWR, 0644)
-	defer f.Close()
-	_, _ = f.Write([]byte("IF0_ENVIRONMENT=sample-repo"))
-	_ = loadEnv(common.EnvDir)
-	assert.Equal(t, "sample-repo", config.GetEnvVariable("IF0_ENVIRONMENT"))
+func TestInspectEnv(t *testing.T) {
+	stdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	InspectEnv("testdata/test-env-1")
+	w.Close()
+	out, _ := ioutil.ReadAll(r)
+	os.Stdout = stdout
+	assert.Equal(t, string(out), "IF0_ENVIRONMENT : test-repo-1\n")
 }
-
