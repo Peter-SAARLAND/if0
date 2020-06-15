@@ -107,6 +107,7 @@ func ListEnv() {
 }
 
 func InspectEnv(envDir string) {
+	fmt.Println("Configuration for zero environment:", envDir)
 	allConfig, err := readAllEnvFiles(envDir)
 	if err != nil {
 		fmt.Println("Error: Inspect environment -", err)
@@ -116,7 +117,7 @@ func InspectEnv(envDir string) {
 		return
 	}
 	for c, val := range allConfig {
-		fmt.Println(strings.ToUpper(c), ":", val)
+		fmt.Println(strings.ToUpper(c)+"="+val.(string))
 	}
 }
 

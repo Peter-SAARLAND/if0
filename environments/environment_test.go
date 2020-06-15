@@ -80,5 +80,5 @@ func TestInspectEnv(t *testing.T) {
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = stdout
-	assert.Equal(t, string(out), "IF0_ENVIRONMENT : test-repo-1\n")
+	assert.Contains(t, string(out), "IF0_ENVIRONMENT=test-repo-1\n")
 }
