@@ -69,7 +69,9 @@ func TestListEnv(t *testing.T) {
 	w.Close()
 	out, _ := ioutil.ReadAll(r)
 	os.Stdout = stdout
-	assert.Equal(t, string(out), "Local repository: testdata\\test-env-1. Repository URL:  remote repository does not exist\n")
+	localRepo := filepath.Join("testdata", "test-env-1")
+	assert.Contains(t, string(out), "Local repository: "+localRepo)
+	assert.Contains(t, string(out), "Repository URL:  remote repository does not exist\n")
 }
 
 func TestInspectEnv(t *testing.T) {
