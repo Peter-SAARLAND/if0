@@ -43,7 +43,7 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
     
     * `--dst` flag is again optional; in this case, `dst` file name is assumed to be the same as the `src` config file name. This requires the user to know the destination file name.
     
-6. `if0 config --sync`
+6. `if0 config --sync` (temporarily disabled, see `if0 sync`)
     
     * This command synchronizes configuration files with the git repository mentioned in the `if0.env` file under variable `REMOTE_STORAGE`.
     
@@ -53,6 +53,62 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
     
     * Additionally, the user can also choose to add/commit/push the local changes by entering 'y' when prompted, or 'n' if they do not want the local changes to be pushed to the repository.
 
+### Environment commands:
+
+1. `if0 add test-env [git@gitlab.com:test-env.git]`
+    
+    This command is used to add zero environments.
+
+    There are three ways to add an environment:
+    
+    1. Using `GL_TOKEN`
+    
+        This requires the user to set the `GL_TOKEN` variable in the `~/.if0/if0.env` configuration file. The value for this variable is the GitLab personal access token.
+    
+        After setting the variable, running `if0 env add env-1` will create a private project titled `env-1` on Gitlab.
+        
+        The same environment is created locally with initial requirements (`zero.env`, `.gitlab-ci.yml`, `.ssh` directory with `id_rsa` and `id_rsa.pub` files) and synced with the private project `env-1`.
+        
+    2.  By running the command `if0 env add env-2 git@gitlab.com:peter.saarland/env-2.git`
+    
+        This command would clone the repository at `~/.if0/.environment/gitlab.com/peter.saarland/env-2` with the initial requirements, and sync these changes with the remote repository.
+        
+    3. Running the command `if0 env add env-3` with an empty `GL_TOKEN` or no remote repository url
+        
+        In this case, the environment is created locally at `~/.if0/.environments/env-3`
+    
+2. `if0 sync [env-name]`
+    
+    This command is used to synchronize a zero environment with its remote repository. 
+    
+    `env-name` is optional; when no `env-name` is provided, the current working directory is assumed to be the zero environment to be synced.
+
+3. `if0 plan [env-name]`
+
+    This command corresponds to `dash1 make plan`. It initializes the necessary Terraform provider modules for the Environment `env-name` and then creates a plan in ~/.if0/.environments/$NAME/dash1.plan`
+    
+    
+4. `if0 infrastructure [env-name]` 
+    
+    This command corresponds to `dash1 make infrastructure`. It generates configuration necessary for zero.
+
+5. `if0 platform [env-name]` 
+
+    This command corresponds to `zero make platform`
+
+6. `if0 destroy [env-name]`
+
+    This command corresponds to `dash1 make destroy`
+
+### Other commands:
+
+1. `if0 status dep`
+
+    This command is used to check for the status of dependencies such as docker and vagrant.
+
+2. `if0 version`
+
+    This command prints the `[if0 version](https://gitlab.com/peter.saarland/if0/-/blob/master/README.md#if0-version)`.
     
 ### **Developer Documentation**
 
