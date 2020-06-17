@@ -55,6 +55,7 @@ func TestAddLocalEnv(t *testing.T) {
 func TestReadEnvNoFiles(t *testing.T) {
 	common.EnvDir = filepath.Join("testdata", "sample-repo")
 	os.Remove(filepath.Join("testdata", "sample-repo", "if0.env"))
+	os.Remove(filepath.Join("testdata", "sample-repo", "logo.png"))
 	allConfig, err := readAllEnvFiles(common.EnvDir)
 	assert.EqualError(t, err, "no .env files found")
 	assert.Nil(t, allConfig)
