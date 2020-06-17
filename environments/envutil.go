@@ -8,7 +8,9 @@ import (
 	"if0/common/sync"
 	"if0/config"
 	gitlabclient "if0/environments/git"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -60,6 +62,10 @@ func cloneEmptyRepo(remoteStorage, envDir string) (*git.Repository, error) {
 
 // This function checks if the environment directory contains necessary files, if not, creates them.
 func envInit(envPath string) error {
+	err := downloadLogo(envPath)
+	if err != nil {
+		fmt.Println("Error: Downloading logo -", err)
+	}
 	createZeroFile(envPath)
 	createCIFile(envPath)
 	sshDir := filepath.Join(envPath, ".ssh")
@@ -81,6 +87,8 @@ func createZeroFile(envPath string) {
 	f := createFile(filepath.Join(envPath, "zero.env"))
 	defer f.Close()
 	if f != nil {
+		repoName := strings.Replace(envPath, common.EnvDir+string(os.PathSeparator), "", 1)
+		_, _ = f.WriteString("IF0_ENVIRONMENT="+repoName+"\n")
 		pwd := generateRandSeq()
 		hash, err := generateHashCmd(pwd)
 		if runtime.GOOS == "windows" || hash == "" || err != nil {
@@ -269,4 +277,31 @@ func getRepoUrl(envDir string) string {
 	}
 	remotes, _ := r.Remote("origin")
 	return remotes.Config().URLs[0]
+}
+
+func downloadLogo(envDir string) error {
+	logoFile := filepath.Join(envDir, "logo.png")
+	url := "https://gitlab.com/peter.saarland/scratch/-/raw/master/logo.png?inline=false"
+
+	out, err := os.Create(logoFile)
+	if err != nil  {
+		return err
+	}
+	defer out.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil  {
+		return err
+	}
+	return nil
 }
