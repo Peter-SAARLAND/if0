@@ -108,7 +108,7 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
 
 2. `if0 version`
 
-    This command prints the `[if0 version](https://gitlab.com/peter.saarland/if0/-/blob/master/README.md#if0-version)`.
+    This command prints the [`if0 version`](https://gitlab.com/peter.saarland/if0#if0-version)
     
 ### **Developer Documentation**
 
