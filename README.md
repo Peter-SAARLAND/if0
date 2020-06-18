@@ -87,7 +87,6 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
 
     This command corresponds to `dash1 make plan`. It initializes the necessary Terraform provider modules for the Environment `env-name` and then creates a plan in ~/.if0/.environments/$NAME/dash1.plan`
     
-    
 4. `if0 infrastructure [env-name]` 
     
     This command corresponds to `dash1 make infrastructure`. It generates configuration necessary for zero.
@@ -99,7 +98,15 @@ To be able to use `if0` app, `cd` to `if0` directory, and run `go install if0`. 
 6. `if0 destroy [env-name]`
 
     This command corresponds to `dash1 make destroy`
+    
+7. `if0 list`
+    
+     This command lists all the zero environments available at `~/.if0/.environments`
 
+8. `if0 inspect [env-name]`
+
+    This command displays the configuration available in all the *.env files of the environment `env-name`. If `env-name` is not provided, the current working directory is assumed to be the zero environment to be inspected.
+    
 ### Other commands:
 
 1. `if0 status dep`
