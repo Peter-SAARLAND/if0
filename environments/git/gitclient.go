@@ -6,6 +6,7 @@ import (
 	"github.com/xanzy/go-gitlab"
 	"if0/common"
 	"if0/config"
+	"strings"
 )
 
 func CreateProject(projectName, gitlabToken string) (string, string, error) {
@@ -53,7 +54,7 @@ func getIf0GroupId(client *gitlab.Client) (int, error) {
 		return 0, err
 	}
 	for _, n := range namespace {
-		if n.Name == groupName {
+		if strings.EqualFold(n.Name, groupName)  {
 			namespaceId = n.ID
 		}
 	}
