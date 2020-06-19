@@ -153,3 +153,12 @@ func writeDefaultIf0Config(defaultEnvFile string) error {
 	}
 	return nil
 }
+
+func writeToIf0(key, value string) {
+	s := key + "=" + value + "\n"
+	err := ioutil.WriteFile(common.If0Default, []byte(s), 0644)
+	if err != nil {
+		fmt.Printf("Error: Setting %s in if0.env -%s\n", key, err)
+		return
+	}
+}

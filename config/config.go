@@ -18,6 +18,7 @@ func SetEnvVariable(key, value string) {
 	if err != nil {
 		fmt.Printf("Error: Setting env variable %s - %s\n", key, err)
 	}
+	writeToIf0(key, value)
 }
 
 // GetEnvVariable retrieves the value of a config variable
@@ -43,7 +44,7 @@ func PrintCurrentRunningConfig() {
 	}
 	ReadConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
-		fmt.Println(strings.ToUpper(key), ":", val)
+		fmt.Println(strings.ToUpper(key)+"="+val.(string))
 	}
 }
 
