@@ -41,7 +41,7 @@ func TestAddConfigFileReplace(t *testing.T) {
 	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1"), 0644)
-	AddConfigFile(testConfig, false)
+	AddConfigFile(testConfig)
 	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
@@ -54,7 +54,7 @@ func TestMergeConfigFiles(t *testing.T) {
 	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	testConfig := "config2.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey2=testval2\nIF0_VERSION=1"), 0644)
-	_ = MergeConfigFiles(testConfig, common.If0Default, false)
+	_ = MergeConfigFiles(testConfig, common.If0Default)
 	ReadConfigFile(common.If0Default)
 	configMap := viper.AllSettings()
 	assert.Equal(t, 3, len(configMap))
@@ -69,26 +69,11 @@ func TestAddConfigFileEnvironment(t *testing.T) {
 	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
 	testConfig := "zero1.env"
 	_ = ioutil.WriteFile(testConfig, []byte("zerokey1=zeroval1"), 0644)
-	AddConfigFile(testConfig, true)
+	AddConfigFile(testConfig)
 	ReadConfigFile(filepath.Join(common.EnvDir, testConfig))
 	configMap := viper.AllSettings()
 	assert.Equal(t, 1, len(configMap))
 	assert.Equal(t, "zeroval1", configMap["zerokey1"])
-	_ = os.Remove(testConfig)
-}
-
-func TestMergeFilesEnvironment(t *testing.T) {
-	common.If0Dir = "testif0"
-	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
-	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
-	testConfig := "zero2.env"
-	_ = ioutil.WriteFile(testConfig, []byte("zerokey2=zeroval2\nZERO_VERSION=2"), 0644)
-	_ = MergeConfigFiles(testConfig, "zero1.env", true)
-	ReadConfigFile(filepath.Join(common.EnvDir, "zero1.env"))
-	configMap := viper.AllSettings()
-	assert.Equal(t, 3, len(configMap))
-	assert.Equal(t, "zeroval1", configMap["zerokey1"])
-	assert.Equal(t, "zeroval2", configMap["zerokey2"])
 	_ = os.Remove(testConfig)
 }
 
@@ -97,7 +82,7 @@ func TestMergeConfigFilesInvalid(t *testing.T) {
 	common.SnapshotsDir = filepath.Join(common.If0Dir, ".snapshots")
 	common.EnvDir = filepath.Join(common.If0Dir, ".environments")
 	common.If0Default = filepath.Join(common.If0Dir, "if0.env")
-	err := MergeConfigFiles("abc.env", "", false)
+	err := MergeConfigFiles("abc.env", "")
 	assert.Error(t, err)
 }
 
@@ -112,7 +97,7 @@ func TestSetEnvVariable(t *testing.T) {
 func TestIsConfigFileValidTrue(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\nIF0_VERSION=1"), 0644)
-	isValid, _ := IsConfigFileValid(testConfig, false)
+	isValid, _ := IsConfigFileValid(testConfig)
 	assert.Equal(t, isValid, true)
 	_ = os.Remove(testConfig)
 }
@@ -120,23 +105,7 @@ func TestIsConfigFileValidTrue(t *testing.T) {
 func TestIsConfigFileValidFalse(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\nabc=def"), 0644)
-	isValid, _ := IsConfigFileValid(testConfig, false)
-	assert.Equal(t, isValid, false)
-	_ = os.Remove(testConfig)
-}
-
-func TestIsZeroConfigFileValidTrue(t *testing.T) {
-	testConfig := "config.env"
-	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\nZERO_VERSION=1"), 0644)
-	isValid, _ := IsConfigFileValid(testConfig, true)
-	assert.Equal(t, isValid, true)
-	_ = os.Remove(testConfig)
-}
-
-func TestIsZeroConfigFileValidFalse(t *testing.T) {
-	testConfig := "config.env"
-	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\n11ZERO_VERSION=1"), 0644)
-	isValid, _ := IsConfigFileValid(testConfig, true)
+	isValid, _ := IsConfigFileValid(testConfig)
 	assert.Equal(t, isValid, false)
 	_ = os.Remove(testConfig)
 }
@@ -144,19 +113,9 @@ func TestIsZeroConfigFileValidFalse(t *testing.T) {
 func TestIf0WithZeroConfig(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\nZERO_VERSION=1"), 0644)
-	isValid, err := IsConfigFileValid(testConfig, false)
+	isValid, err := IsConfigFileValid(testConfig)
 	assert.Error(t, err)
-	assert.Equal(t, "if0.env update invoked with zero-cluster config file", err.Error())
-	assert.Equal(t, isValid, false)
-	_ = os.Remove(testConfig)
-}
-
-func TestZeroWithIf0Config(t *testing.T) {
-	testConfig := "config.env"
-	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\nIF0_VERSION=1"), 0644)
-	isValid, err := IsConfigFileValid(testConfig, true)
-	assert.Error(t, err)
-	assert.Equal(t, "zero-cluster config update invoked with if0.env config file", err.Error())
+	assert.Equal(t, "no valid IF0_VERSION found in the config file", err.Error())
 	assert.Equal(t, isValid, false)
 	_ = os.Remove(testConfig)
 }
@@ -164,16 +123,16 @@ func TestZeroWithIf0Config(t *testing.T) {
 func TestNoValidConfig(t *testing.T) {
 	testConfig := "config.env"
 	_ = ioutil.WriteFile(testConfig, []byte("testkey1=testval1\n"), 0644)
-	isValid, err := IsConfigFileValid(testConfig, false)
+	isValid, err := IsConfigFileValid(testConfig)
 	assert.Error(t, err)
-	assert.Equal(t, "no valid versions (IF0_VERSION or ZERO_VERSION) found in the config file", err.Error())
+	assert.Equal(t, "no valid IF0_VERSION found in the config file", err.Error())
 	assert.Equal(t, isValid, false)
 	_ = os.Remove(testConfig)
 
 }
 
 func TestMergeConfigFilesNoSrc(t *testing.T) {
-	err := MergeConfigFiles("", "", false)
+	err := MergeConfigFiles("", "")
 	assert.Equal(t, "Please provide valid source/destination configuration files for merge.", err.Error())
 }
 

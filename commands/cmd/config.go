@@ -27,7 +27,7 @@ var (
 	// zero flag: used to distinguish between if0 and zero-cluster configuration files.
 	// default: false, for if0
 	// set to true for zero-cluster configurations when the command is called with -z or --zero flag
-	zero bool
+	//zero bool
 
 	// add flag: used to add new or update configuration files.
 	add string
@@ -69,7 +69,7 @@ var (
 			// if --merge is true, the file in --src is merged with file in --dst.
 			// --dst is optional
 			if merge {
-				err := config.MergeConfigFiles(src, dst, zero)
+				err := config.MergeConfigFiles(src, dst)
 				if err != nil {
 					fmt.Println("Error: Merging config files - ", err)
 					return
@@ -117,7 +117,7 @@ func loadConfigFromFlags(configParams []string) {
 
 func loadConfigFromFile(configFile string) {
 	// validating the configuration file
-	isValid, err := config.IsConfigFileValid(configFile, zero)
+	isValid, err := config.IsConfigFileValid(configFile)
 	if !isValid {
 		fmt.Println("Error: Terminating config update: ", err)
 		return
@@ -130,7 +130,7 @@ func loadConfigFromFile(configFile string) {
 	}
 
 	// adding/updating the config file
-	err = config.AddConfigFile(configFile, zero)
+	err = config.AddConfigFile(configFile)
 	if err != nil {
 		fmt.Println("Error: Adding config file - ", err)
 	}
@@ -140,8 +140,8 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 
 	configCmd.Flags().StringSliceVar(&set, "set", nil, "sets env variables via CLI")
-	configCmd.Flags().BoolVarP(&zero, "zero", "z",
-		false, "updates zero cluster configuration")
+	//configCmd.Flags().BoolVarP(&zero, "zero", "z",
+	//	false, "updates zero cluster configuration")
 	configCmd.Flags().BoolVarP(&merge, "merge", "m",
 		false, "merges the new configuration with running configuration")
 	configCmd.Flags().StringVar(&add, "add", "", "configuration file to be added or updated")

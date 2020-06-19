@@ -18,6 +18,7 @@ func SetEnvVariable(key, value string) {
 	if err != nil {
 		fmt.Printf("Error: Setting env variable %s - %s\n", key, err)
 	}
+	writeToIf0(key, value)
 }
 
 // GetEnvVariable retrieves the value of a config variable
@@ -43,7 +44,7 @@ func PrintCurrentRunningConfig() {
 	}
 	ReadConfigFile(common.If0Default)
 	for key, val := range viper.AllSettings() {
-		fmt.Println(strings.ToUpper(key), ":", val)
+		fmt.Println(strings.ToUpper(key)+"="+val.(string))
 	}
 }
 
@@ -51,8 +52,8 @@ func PrintCurrentRunningConfig() {
 // it first checks if the file is already present,
 // if present, it creates a backup in the ~if0/.snapshots directory
 // and then proceeds to replace the current running config file
-func AddConfigFile(srcConfigFile string, zero bool) error {
-	runningConfigFile := getRunningConfigFile(srcConfigFile, zero)
+func AddConfigFile(srcConfigFile string) error {
+	runningConfigFile := common.If0Default
 	// taking a backup of the running configuration if already present
 	present := isFilePresent(runningConfigFile)
 	if present {
@@ -74,12 +75,12 @@ func AddConfigFile(srcConfigFile string, zero bool) error {
 // it first gets a valid dst file path to be merged with
 // if the file is present, the dst file is backed-up in the .snapshots directory
 // and then merged with the src config file
-func MergeConfigFiles(src, dst string, zero bool) error {
+func MergeConfigFiles(src, dst string) error {
 	if src == "" {
 		return errors.New("Please provide valid source/destination configuration files for merge.")
 	}
-	dst = getDstFileForMerge(src, dst, zero)
-	srcValid, err := IsConfigFileValid(src, zero)
+	dst = common.If0Default
+	srcValid, err := IsConfigFileValid(src)
 	if !srcValid {
 		fmt.Println("Please provide a valid configuration file for merge.")
 		return err
@@ -101,23 +102,17 @@ func MergeConfigFiles(src, dst string, zero bool) error {
 
 // IsConfigFileValid checks if the provided configuration file is valid for the config add/update operation.
 // valid if0.env files contain IF0_VERSION key
-// valid zero-cluster files contain ZERO_VERSION key
-func IsConfigFileValid(configFile string, zero bool) (bool, error) {
-	// read IF0_VERSION, ZERO_VERSION
+func IsConfigFileValid(configFile string) (bool, error) {
+	// read IF0_VERSION
 	viper.SetConfigFile(configFile)
 	err := viper.ReadInConfig()
 	if err != nil {
 		fmt.Println("Error: Reading config file: ", err)
 	}
 	if0Version := viper.IsSet(common.IF0_VERSION)
-	zeroVersion := viper.IsSet(common.ZERO_VERSION)
 
-	if !if0Version && !zeroVersion {
-		return false, errors.New("no valid versions (IF0_VERSION or ZERO_VERSION) found in the config file")
-	} else if if0Version && zero {
-		return false, errors.New("zero-cluster config update invoked with if0.env config file")
-	} else if zeroVersion && !zero {
-		return false, errors.New("if0.env update invoked with zero-cluster config file")
+	if !if0Version {
+		return false, errors.New("no valid IF0_VERSION found in the config file")
 	}
 	return true, nil
 }
