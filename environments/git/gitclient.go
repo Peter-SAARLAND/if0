@@ -6,18 +6,18 @@ import (
 	"github.com/xanzy/go-gitlab"
 	"if0/common"
 	"if0/config"
+	"strings"
 )
 
 func CreateProject(projectName, gitlabToken string) (string, string, error) {
-	clientOptions := gitlab.WithBaseURL(getIf0RegistryUrl())
-	git, err := gitlab.NewClient(gitlabToken, clientOptions)
+	client, err := gitlabClient(gitlabToken)
 	if err != nil {
 		fmt.Println("Error: Creating gitlab client -", err)
 		return "", "", err
 	}
 
 	// if group ID is 0 (group not found/invalid)
-	groupId, err := getIf0GroupId(git)
+	groupId, err := getIf0GroupId(client)
 	if groupId == 0 || err != nil {
 		return "", "", err
 	}
@@ -29,13 +29,19 @@ func CreateProject(projectName, gitlabToken string) (string, string, error) {
 		NamespaceID: gitlab.Int(groupId),
 	}
 
-	project, _, err := git.Projects.CreateProject(projectOptions)
+	project, _, err := client.Projects.CreateProject(projectOptions)
 	if err != nil {
 		fmt.Println("Error: Creating GitLab project -", err)
 		return "", "", err
 	}
 	fmt.Println("Project created successfully at ", project.HTTPURLToRepo)
 	return project.SSHURLToRepo, project.HTTPURLToRepo, nil
+}
+
+func gitlabClient(gitlabToken string) (*gitlab.Client, error) {
+	clientOptions := gitlab.WithBaseURL(getIf0RegistryUrl())
+	git, err := gitlab.NewClient(gitlabToken, clientOptions)
+	return git, err
 }
 
 func getIf0RegistryUrl() string {
@@ -53,7 +59,7 @@ func getIf0GroupId(client *gitlab.Client) (int, error) {
 		return 0, err
 	}
 	for _, n := range namespace {
-		if n.Name == groupName {
+		if strings.EqualFold(n.Name, groupName)  {
 			namespaceId = n.ID
 		}
 	}

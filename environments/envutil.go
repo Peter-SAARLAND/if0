@@ -11,6 +11,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -228,17 +229,34 @@ func addLocalEnv(envDir string) {
 func createNestedDirPath(repoName, repoUrl string) string {
 	var dirPath string
 	if repoUrl != "" {
+		repoUrl = removePortNumber(repoUrl)
 		dirPathElem := strings.FieldsFunc(repoUrl, func(r rune) bool {
 			return r == ':' || r == '/' || r == '@'
 		})
 		dirPathElem[len(dirPathElem)-1] = strings.Split(dirPathElem[len(dirPathElem)-1], ".")[0]
-		dirPath = filepath.Join(common.EnvDir, strings.Join(dirPathElem[1:], string(os.PathSeparator)))
+		dirPath = filepath.Join(common.EnvDir, strings.Join(dirPathElem, string(os.PathSeparator)))
 	} else {
 		dirPath = filepath.Join(common.EnvDir, repoName)
 	}
 	return dirPath
 }
 
+func removePortNumber(repoUrl string) string {
+	if strings.Contains(repoUrl, "ssh:") {
+		u, _ := url.Parse(repoUrl)
+		repoUrl = strings.Replace(repoUrl, u.Port(), "", 1)
+		i := strings.Index(repoUrl, "git@")
+		repoUrl = repoUrl[i+4:]
+	} else if strings.Contains(repoUrl, "git@") {
+		i := strings.Index(repoUrl, "git@")
+		repoUrl = repoUrl[i+4:]
+	} else if strings.Contains(repoUrl, "http") {
+		u, _ := url.Parse(repoUrl)
+		repoUrl = strings.Replace(repoUrl, u.Port(), "", 1)
+		repoUrl = strings.Replace(repoUrl, u.Scheme, "", 1)
+	}
+	return repoUrl
+}
 
 // helper functions for `if0 list`
 func visit(p string, info os.FileInfo, err error) error {
