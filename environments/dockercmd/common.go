@@ -65,52 +65,63 @@ func dockerRun(containerConfig *container.Config, hostConfig *container.HostConf
 	ctx := context.Background()
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		fmt.Println("Error: ContainerClient - ", err)
+		fmt.Println("Error: ContainerClient -", err)
 		return err
 	}
 
-	status, err := dockerClient.ImagePull(ctx, image, types.ImagePullOptions{})
-	if err != nil {
-		fmt.Println("Error: ImagePull - ", err)
-		return err
-	}
-	// setting VERBOSITY=1
-	if common.Verbose {
-		_, _ = io.Copy(os.Stdout, status)
-	}
 	containerConfig.Env = append(containerConfig.Env, "VERBOSITY=1")
 	resp, err := dockerClient.ContainerCreate(ctx, containerConfig,
 		hostConfig, nil, containerName)
 	if err != nil {
-		fmt.Println("Error: ContainerCreate - ", err)
+		fmt.Println("Error: ContainerCreate -", err)
 		return err
 	}
 
 	if err := dockerClient.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		fmt.Println("Error: ContainerStart - ", err)
+		fmt.Println("Error: ContainerStart -", err)
+		_ = removeContainer(dockerClient, resp.ID)
 		return err
 	}
+
+	printContainerLogs(err, dockerClient, ctx, resp)
 
 	statusCh, errCh := dockerClient.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
-			fmt.Println("Error: ContainerWait - ", err)
+			fmt.Println("Error: ContainerWait -", err)
+			_ = removeContainer(dockerClient, resp.ID)
 			return err
 		}
 	case <-statusCh:
 	}
 
-	out, err := dockerClient.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	err = removeContainer(dockerClient, resp.ID)
 	if err != nil {
-		fmt.Println("Error: ContainerLogs - ", err)
 		return err
 	}
-	_, _ = io.Copy(os.Stdout, out)
+	return nil
+}
 
-	err = dockerClient.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{})
+func printContainerLogs(err error, dockerClient *client.Client, ctx context.Context, resp container.ContainerCreateCreatedBody) {
+	out, err := dockerClient.ContainerLogs(ctx, resp.ID,
+		types.ContainerLogsOptions{
+			ShowStdout: true,
+			ShowStderr: true,
+			Follow:     true,
+		})
 	if err != nil {
-		fmt.Println("Error: ContainerRemove - ", err)
+		fmt.Println("Error: ContainerLogs -", err)
+	}
+	defer out.Close()
+	_, _ = io.Copy(os.Stdout, out)
+}
+
+func removeContainer(dockerClient *client.Client, respId string) error {
+	ctx := context.Background()
+	err := dockerClient.ContainerRemove(ctx, respId, types.ContainerRemoveOptions{})
+	if err != nil {
+		fmt.Println("Error: ContainerRemove -", err)
 		return err
 	}
 	return nil
