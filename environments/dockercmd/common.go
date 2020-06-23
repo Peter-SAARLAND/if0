@@ -145,7 +145,6 @@ func stopAndRemoveContainer(dockerClient *client.Client, containerName string) {
 	}
 
 	for _, c := range containers {
-		fmt.Println("container.Names", c.Names)
 		for _, contName := range c.Names {
 			if strings.EqualFold(contName, "/"+containerName) {
 				remove = true
