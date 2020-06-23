@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -70,6 +71,10 @@ func dockerRun(containerConfig *container.Config, hostConfig *container.HostConf
 	}
 
 	containerConfig.Env = append(containerConfig.Env, "VERBOSITY=1")
+
+	// remove container with the same name, if present
+	pruneContainer(dockerClient, containerName)
+
 	resp, err := dockerClient.ContainerCreate(ctx, containerConfig,
 		hostConfig, nil, containerName)
 	if err != nil {
@@ -125,4 +130,39 @@ func removeContainer(dockerClient *client.Client, respId string) error {
 		return err
 	}
 	return nil
+}
+
+func pruneContainer(dockerClient *client.Client, containerName string) {
+	remove := false
+	var containerId string
+	ctx := context.Background()
+	containers, err := dockerClient.ContainerList(ctx, types.ContainerListOptions{
+		Quiet: true,
+		All: true,
+	})
+	if err != nil {
+		fmt.Println("Error: ContainerList -", err)
+	}
+
+	for _, c := range containers {
+		fmt.Println("container.Names", c.Names)
+		for _, contName := range c.Names {
+			if strings.EqualFold(contName, "/"+containerName) {
+				remove = true
+				containerId = c.ID
+				break
+			}
+		}
+		if remove {
+			break
+		}
+	}
+	if remove {
+		fmt.Println("Container to be removed: ", containerName, containerId)
+			err := dockerClient.ContainerStop(ctx, containerId, nil)
+			if err != nil {
+				fmt.Println("Error: ContainerStop -", err)
+			}
+			removeContainer(dockerClient, containerId)
+	}
 }
