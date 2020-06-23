@@ -73,7 +73,7 @@ func dockerRun(containerConfig *container.Config, hostConfig *container.HostConf
 	containerConfig.Env = append(containerConfig.Env, "VERBOSITY=1")
 
 	// remove container with the same name, if present
-	pruneContainer(dockerClient, containerName)
+	stopAndRemoveContainer(dockerClient, containerName)
 
 	resp, err := dockerClient.ContainerCreate(ctx, containerConfig,
 		hostConfig, nil, containerName)
@@ -132,7 +132,7 @@ func removeContainer(dockerClient *client.Client, respId string) error {
 	return nil
 }
 
-func pruneContainer(dockerClient *client.Client, containerName string) {
+func stopAndRemoveContainer(dockerClient *client.Client, containerName string) {
 	remove := false
 	var containerId string
 	ctx := context.Background()
