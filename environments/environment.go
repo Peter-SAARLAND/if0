@@ -1,6 +1,7 @@
 package environments
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/spf13/viper"
@@ -23,13 +24,20 @@ var (
 
 func AddEnv(addEnvArgs []string) error {
 	var repoName, repoUrl string
-	repoName = addEnvArgs[0]
+	if len(addEnvArgs) == 0 {
+		fmt.Println("Env Name? ")
+		reader := bufio.NewReader(os.Stdin)
+		name, _ := reader.ReadString('\n')
+		repoName = strings.TrimSpace(name)
+	} else {
+		repoName = addEnvArgs[0]
+	}
 	if len(addEnvArgs) > 1 {
 		repoUrl = addEnvArgs[1]
 	}
 	config.ReadConfigFile(common.If0Default)
 	gitlabToken := config.GetEnvVariable("GL_TOKEN")
-	if gitlabToken == "" || repoUrl != "" {
+	if gitlabToken == "" {
 		// adding environment locally (to sync with later)
 		// or syncing a local environment that has already been added
 		err := createLocalEnv(repoName, repoUrl)
@@ -117,7 +125,7 @@ func InspectEnv(envDir string) {
 		return
 	}
 	for c, val := range allConfig {
-		fmt.Println(strings.ToUpper(c)+"="+val.(string))
+		fmt.Println(strings.ToUpper(c) + "=" + val.(string))
 	}
 }
 

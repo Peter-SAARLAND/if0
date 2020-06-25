@@ -3,18 +3,13 @@ package environments
 import (
 	"fmt"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport"
 	"if0/common"
 	"if0/common/sync"
 	"if0/config"
 	gitlabclient "if0/environments/git"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 )
 
@@ -61,107 +56,6 @@ func cloneEmptyRepo(remoteStorage, envDir string) (*git.Repository, error) {
 	return r, nil
 }
 
-// This function checks if the environment directory contains necessary files, if not, creates them.
-func envInit(envPath string) error {
-	err := downloadLogo(envPath)
-	if err != nil {
-		fmt.Println("Error: Downloading logo -", err)
-	}
-	createZeroFile(envPath)
-	createCIFile(envPath)
-	sshDir := filepath.Join(envPath, ".ssh")
-	files, direrr := ioutil.ReadDir(sshDir)
-	// .ssh dir not present or present but no keys
-	if _, err := os.Stat(sshDir); os.IsNotExist(err) || (direrr == nil && len(files) < 2) {
-		fmt.Printf("Creating dir %s\n", sshDir)
-		_ = os.Mkdir(sshDir, 0700)
-		err := generateSSHKeyPair(sshDir)
-		if err != nil {
-			fmt.Println("Error: Generating SSH Key pair - ", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func createZeroFile(envPath string) {
-	f := createFile(filepath.Join(envPath, "zero.env"))
-	defer f.Close()
-	if f != nil {
-		repoName := strings.Replace(envPath, common.EnvDir+string(os.PathSeparator), "", 1)
-		_, _ = f.WriteString("IF0_ENVIRONMENT="+repoName+"\n")
-		pwd := generateRandSeq()
-		hash, err := generateHashCmd(pwd)
-		if runtime.GOOS == "windows" || hash == "" || err != nil {
-			hash, err = generateHashDocker(pwd)
-			if err != nil {
-				fmt.Println("Error: Could not create htpasswd hash -", err)
-				return
-			}
-		}
-		_, _ = f.WriteString("ZERO_ADMIN_USER=admin\n")
-		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD="+pwd+"\n")
-		_, _ = f.WriteString("ZERO_ADMIN_PASSWORD_HASH="+hash+"\n")
-	}
-}
-
-func createCIFile(envPath string) {
-	f := createFile(filepath.Join(envPath, ".gitlab-ci.yml"))
-	defer f.Close()
-	if f != nil {
-		shipmateUrl := getShipmateUrl()
-		dataToWrite := fmt.Sprintf("include:\n  - remote: '%s'", shipmateUrl)
-		_, _ = f.Write([]byte(dataToWrite))
-	}
-}
-
-func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
-	w, _ := syncObj.GetWorktree(r)
-	status, _ := syncObj.Status(w)
-	if len(status) > 0 {
-		fmt.Println("Syncing environment init file changes")
-		for file, _ := range status {
-			_ = syncObj.AddFile(w, file)
-		}
-		// git commit
-		err := syncObj.Commit(w)
-		if err != nil {
-			fmt.Println("Error: Committing changes - ", err)
-			return err
-		}
-		// git push
-		err = syncObj.Push(auth, r)
-		if err != nil {
-			fmt.Println("Error: Pushing changes - ", err)
-			return err
-		}
-	}
-	return nil
-}
-
-func createFile(fileName string) *os.File {
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		fmt.Println("Creating file", fileName)
-		f, _ := os.OpenFile(fileName, os.O_CREATE|os.O_RDWR, 0644)
-		return f
-	}
-	return nil
-}
-
-func getShipmateUrl() string {
-	// get SHIPMATE_WORKFLOW_URL from if0.env
-	config.ReadConfigFile(common.If0Default)
-	shipmateUrl := config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
-	// if not found, add it to if0.env and return the value
-	if shipmateUrl == "" {
-		f, _ := os.OpenFile(common.If0Default, os.O_APPEND, 0644)
-		defer f.Close()
-		_, _ = f.WriteString("SHIPMATE_WORKFLOW_URL=https://gitlab.com/peter.saarland/shipmate/-/raw/master/shipmate.gitlab-ci.yml\n")
-	}
-	config.ReadConfigFile(common.If0Default)
-	return config.GetEnvVariable("SHIPMATE_WORKFLOW_URL")
-}
-
 func createLocalEnv(repoName string, repoUrl string) error {
 	envDir := createNestedDirPath(repoName, repoUrl)
 	// if a remote repository (empty) url is provided, sync the changes
@@ -175,7 +69,7 @@ func createLocalEnv(repoName string, repoUrl string) error {
 	} else {
 		addLocalEnv(envDir)
 		fmt.Println("No remote repository url was found for sync. "+
-			"The environment has been created locally at ", envDir)
+			"The local copy of the environment can be found at ", envDir)
 		fmt.Println("To sync the local changes, run `if0 add repo-name repo-url`")
 	}
 	return nil
@@ -222,6 +116,9 @@ func addLocalEnv(envDir string) {
 		if err != nil {
 			fmt.Println("Error: Creating nested directories - ", err)
 		}
+	} else {
+		fmt.Println("environment already present")
+		return
 	}
 	_ = envInit(envDir)
 }
@@ -279,7 +176,6 @@ func visit(p string, info os.FileInfo, err error) error {
 }
 
 func checkForZeroEnv(dir string) bool {
-	//fmt.Println("dir:", dir)
 	zeroPath := filepath.Join(dir, "zero.env")
 	if _, err := os.Stat(zeroPath); os.IsNotExist(err) {
 		return false
@@ -295,31 +191,4 @@ func getRepoUrl(envDir string) string {
 	}
 	remotes, _ := r.Remote("origin")
 	return remotes.Config().URLs[0]
-}
-
-func downloadLogo(envDir string) error {
-	logoFile := filepath.Join(envDir, "logo.png")
-	url := "https://gitlab.com/peter.saarland/scratch/-/raw/master/logo.png?inline=false"
-
-	out, err := os.Create(logoFile)
-	if err != nil  {
-		return err
-	}
-	defer out.Close()
-
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
-	}
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil  {
-		return err
-	}
-	return nil
 }
