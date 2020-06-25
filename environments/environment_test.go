@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"if0/common"
 	"if0/common/sync"
+	"if0/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -17,6 +18,7 @@ func TestAddEnvAuthError(t *testing.T) {
 	getAuth = func(authObj sync.AuthOps, remoteStorage string) (transport.AuthMethod, error) {
 		return nil, errors.New("test-auth-error")
 	}
+	config.SetEnvVariable("GL_TOKEN", "")
 	err := AddEnv([]string{"add", "sample_repo", "repo-url"})
 	assert.EqualError(t, err, "test-auth-error")
 }
@@ -29,6 +31,7 @@ func TestAddEnvClone(t *testing.T) {
 	pushEnvInitChanges = func(r *git.Repository, auth transport.AuthMethod) error {
 		return nil
 	}
+	config.SetEnvVariable("GL_TOKEN", "")
 	err := AddEnv([]string{"add", "sample_repo", "repo-url"})
 	assert.Nil(t, err)
 }
