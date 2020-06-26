@@ -84,23 +84,23 @@ func createDash1Env(envPath string) {
 	var dash1Content []string
 	var zeroContent []string
 
-	fmt.Println("Use Cloud Provider?: [Y/n]")
+	fmt.Print("Use Cloud Provider? [Y/n]: ")
 	reader := bufio.NewReader(os.Stdin)
 	useProvider, _ := reader.ReadString('\n')
 	useProvider = strings.TrimSpace(strings.ToLower(useProvider))
 	if (useProvider == "y" || useProvider == "") && !skipDash {
 		dash1Content = useCloudProvider(dash1Content)
 	} else {
-		fmt.Println("Enter IPs:")
+		fmt.Print("Enter IPs:")
 		ips, _ := reader.ReadString('\n')
 		zeroContent = append(zeroContent, "ZERO_NODES_MANAGER="+ips+"\n")
 	}
 
-	fmt.Println("Custom Domain?: [y/N]")
+	fmt.Print("Custom Domain? [y/N]: ")
 	customDomain, _ := reader.ReadString('\n')
 	switch strings.TrimSpace(strings.ToLower(customDomain)) {
 	case "y":
-		fmt.Println("Enter Domain: ")
+		fmt.Print("Enter Domain: ")
 		domain, _ := reader.ReadString('\n')
 		zeroContent = append(zeroContent, "ZERO_BASE_DOMAIN="+domain+"\n")
 	case "n", "":
@@ -123,26 +123,26 @@ func createDash1Env(envPath string) {
 }
 
 func useCloudProvider(dash1Content []string) []string {
-	fmt.Println("Cloud Provider: [1. HCLOUD, 2. Digital Ocean, 3. AWS]")
+	fmt.Print("Cloud Provider [1. HCLOUD, 2. Digital Ocean, 3. AWS]: ")
 	reader := bufio.NewReader(os.Stdin)
 	provider, _ := reader.ReadString('\n')
 	switch strings.TrimSpace(strings.ToLower(provider)) {
 	case "1", "":
 		dash1Content = append(dash1Content, "DASH1_MODULE=hcloud\n")
-		fmt.Println("Enter HCLOUD_TOKEN")
+		fmt.Print("Enter HCLOUD_TOKEN: ")
 		htoken, _ := reader.ReadString('\n')
 		dash1Content = append(dash1Content, "HCLOUD_TOKEN="+htoken)
 	case "2":
 		dash1Content = append(dash1Content, "DASH1_MODULE=digitalocean\n")
-		fmt.Println("Enter DO_TOKEN")
+		fmt.Print("Enter DO_TOKEN: ")
 		doToken, _ := reader.ReadString('\n')
 		dash1Content = append(dash1Content, "DO_TOKEN="+doToken)
 	case "3":
 		dash1Content = append(dash1Content, "DASH1_MODULE=aws\n")
-		fmt.Println("Enter AWS_SECRET_KEY_ID")
+		fmt.Print("Enter AWS_SECRET_KEY_ID: ")
 		awsSecretKeyId, _ := reader.ReadString('\n')
 		dash1Content = append(dash1Content, "AWS_SECRET_KEY_ID="+awsSecretKeyId)
-		fmt.Println("Enter AWS_SECRET_ACCESS_KEY")
+		fmt.Print("Enter AWS_SECRET_ACCESS_KEY: ")
 		awsSecretAccessKey, _ := reader.ReadString('\n')
 		dash1Content = append(dash1Content, "AWS_SECRET_ACCESS_KEY="+awsSecretAccessKey)
 	}
@@ -154,7 +154,7 @@ func pushInitChanges(r *git.Repository, auth transport.AuthMethod) error {
 	status, _ := syncObj.Status(w)
 	if len(status) > 0 {
 		fmt.Println("Syncing environment init file changes")
-		for file, _ := range status {
+		for file := range status {
 			_ = syncObj.AddFile(w, file)
 		}
 		// git commit

@@ -76,14 +76,19 @@ func createLocalEnv(repoName string, repoUrl string) error {
 }
 
 func createGLProject(repoName, glToken string) error {
+	config.ReadConfigFile(common.If0Default)
+	if0RegUrl := config.GetEnvVariable("IF0_REGISTRY_URL")
+	if0RegGroup := config.GetEnvVariable("IF0_REGISTRY_GROUP")
+	httpRepoUrl := if0RegUrl+"/"+if0RegGroup+"/"+repoName
+	// adding the environment locally
+	// TODO: we need a check here to check if the project exists already on gitlab
+	envDir := createNestedDirPath(repoName, httpRepoUrl)
+	addLocalEnv(envDir)
 	// creating a private project in gitlab
-	sshRepoUrl, httpRepoUrl, err := gitlabclient.CreateProject(repoName, glToken)
+	sshRepoUrl, _, err := gitlabclient.CreateProject(repoName, glToken)
 	if err != nil {
 		return err
 	}
-	// adding the environment locally
-	envDir := createNestedDirPath(repoName, httpRepoUrl)
-	addLocalEnv(envDir)
 	// syncing local changes with the private project
 	err = syncLocalEnvChanges(sshRepoUrl, envDir)
 	if err != nil {

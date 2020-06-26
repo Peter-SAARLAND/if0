@@ -25,7 +25,7 @@ var (
 func AddEnv(addEnvArgs []string) error {
 	var repoName, repoUrl string
 	if len(addEnvArgs) == 0 {
-		fmt.Println("Env Name? ")
+		fmt.Print("Env Name?: ")
 		reader := bufio.NewReader(os.Stdin)
 		name, _ := reader.ReadString('\n')
 		repoName = strings.TrimSpace(name)
@@ -45,6 +45,7 @@ func AddEnv(addEnvArgs []string) error {
 			return err
 		}
 	} else {
+		// TODO: check if the API is reachable
 		// adding environment using GitLab token
 		err := createGLProject(repoName, gitlabToken)
 		if err != nil {
