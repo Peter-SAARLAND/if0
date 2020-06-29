@@ -35,11 +35,11 @@ If a repo url is provided, the repository present at the remote repository url i
 If there is no GL_TOKEN and no repo url, only a local copy is created at ~/.if0/.environments`,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) < 1 {
-			fmt.Println("Please provide valid arguments.")
-			fmt.Println("example command: if0 add repo-name [git@gitlab.com:repo-name.git]")
-			return
-		}
+		//if len(args) < 1 {
+		//	fmt.Println("Please provide valid arguments.")
+		//	fmt.Println("example command: if0 add repo-name [git@gitlab.com:repo-name.git]")
+		//	return
+		//}
 		err := environments.AddEnv(args)
 		if err != nil {
 			fmt.Println("Error: Adding repo - ", err)
